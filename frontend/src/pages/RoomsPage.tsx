@@ -20,11 +20,45 @@ function RoomsPage() {
   const [newRoom, setNewRoom] = useState('');
 
   // fetch rooms
-  const fetchRooms = () => {
-    API.get(`/rooms/home/${homeId}`)
-      .then(res => setRooms(res.data))
-      .catch(err => console.error(err));
-  };
+  const fetchRooms = async () => {
+  try {
+    const res = await API.get(`/rooms/layout/${homeId}`);
+
+    const rows = res.data;
+
+    const roomMap: any = {};
+
+    rows.forEach((row: any) => {
+
+      if (!roomMap[row.room_id]) {
+        roomMap[row.room_id] = {
+          id: row.room_id,
+          name: row.room_name,
+          width: row.room_width,
+          height: row.room_height,
+          zones: [],
+        };
+      }
+
+      if (row.zone_id) {
+        roomMap[row.room_id].zones.push({
+          id: row.zone_id,
+          name: row.zone_name,
+          type: row.zone_type,
+          width: row.zone_width,
+          height: row.zone_height,
+          pos_x: row.pos_x,
+          pos_y: row.pos_y,
+        });
+      }
+    });
+
+    setRooms(Object.values(roomMap));
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   useEffect(() => {
     fetchRooms();

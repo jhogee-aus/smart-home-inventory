@@ -43,3 +43,42 @@ exports.getRoomsByHome = (req, res) => {
     }
   );
 };
+
+// GET ROOMS WITH ZONES
+exports.getRoomsWithZones = (req, res) => {
+  const { homeId } = req.params;
+
+  db.all(
+    `
+    SELECT
+      rooms.id AS room_id,
+      rooms.name AS room_name,
+      rooms.width AS room_width,
+      rooms.height AS room_height,
+
+      zones.id AS zone_id,
+      zones.name AS zone_name,
+      zones.type AS zone_type,
+      zones.width AS zone_width,
+      zones.height AS zone_height,
+      zones.pos_x,
+      zones.pos_y
+
+    FROM rooms
+    LEFT JOIN zones
+      ON zones.room_id = rooms.id
+
+    WHERE rooms.home_id = ?
+    `,
+    [homeId],
+    (err, rows) => {
+      if (err) {
+        return res.status(400).json({
+          error: err.message,
+        });
+      }
+
+      res.json(rows);
+    }
+  );
+};
