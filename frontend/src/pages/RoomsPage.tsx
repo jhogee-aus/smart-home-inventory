@@ -1,143 +1,246 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+
 import API from '../services/api';
 import RoomCanvas from '../components/RoomCanvas';
-import { Stage, Layer, Rect, Text } from 'react-konva';
-import React from 'react';
 
+interface Zone {
+  id: number;
+  name: string;
+  type: string;
+  width: number;
+  height: number;
+  pos_x: number;
+  pos_y: number;
+}
 
 interface Room {
   id: number;
   name: string;
   width: number;
   height: number;
+  zones: Zone[];
 }
 
 function RoomsPage() {
+
   const { homeId } = useParams();
 
   const [rooms, setRooms] = useState<Room[]>([]);
+
   const [newRoom, setNewRoom] = useState('');
 
-  // fetch rooms
+  const [zoneInputs, setZoneInputs] = useState<{
+    [roomId: number]: string;
+  }>({});
+
+  // FETCH ROOMS + ZONES
   const fetchRooms = async () => {
-  try {
-    const res = await API.get(`/rooms/layout/${homeId}`);
 
-    const rows = res.data;
+    try {
 
-    const roomMap: any = {};
+      const res = await API.get(
+        `/rooms/layout/${homeId}`
+      );
 
-    rows.forEach((row: any) => {
+      const rows = res.data;
 
-      if (!roomMap[row.room_id]) {
-        roomMap[row.room_id] = {
-          id: row.room_id,
-          name: row.room_name,
-          width: row.room_width,
-          height: row.room_height,
-          zones: [],
-        };
-      }
+      const roomMap: any = {};
 
-      if (row.zone_id) {
-        roomMap[row.room_id].zones.push({
-          id: row.zone_id,
-          name: row.zone_name,
-          type: row.zone_type,
-          width: row.zone_width,
-          height: row.zone_height,
-          pos_x: row.pos_x,
-          pos_y: row.pos_y,
-        });
-      }
-    });
+      rows.forEach((row: any) => {
 
-    setRooms(Object.values(roomMap));
+        // create room once
+        if (!roomMap[row.room_id]) {
 
-  } catch (err) {
-    console.error(err);
-  }
-};
+          roomMap[row.room_id] = {
+            id: row.room_id,
+            name: row.room_name,
+            width: row.room_width,
+            height: row.room_height,
+            zones: [],
+          };
+        }
+
+        // push zone
+        if (row.zone_id) {
+
+          roomMap[row.room_id].zones.push({
+            id: row.zone_id,
+            name: row.zone_name,
+            type: row.zone_type,
+            width: row.zone_width,
+            height: row.zone_height,
+            pos_x: row.pos_x,
+            pos_y: row.pos_y,
+          });
+        }
+      });
+
+      setRooms(Object.values(roomMap));
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
+
     fetchRooms();
+
   }, []);
 
-  // create room
+  // CREATE ROOM
   const createRoom = async () => {
+
     if (!newRoom.trim()) return;
 
     try {
+
       await API.post(`/rooms/${homeId}`, {
         name: newRoom,
         width: 500,
         height: 400,
-        pos_x: 0,
-        pos_y: 0,
       });
 
       setNewRoom('');
+
       fetchRooms();
+
     } catch (err) {
+
+      console.error(err);
+    }
+  };
+
+  // CREATE ZONE
+  const createZone = async (roomId: number) => {
+
+    const zoneName = zoneInputs[roomId];
+
+    if (!zoneName?.trim()) return;
+
+    try {
+
+      await API.post(`/zones/${roomId}`, {
+        name: zoneName,
+        type: 'storage',
+        width: 120,
+        height: 60,
+        pos_x: 40,
+        pos_y: 80,
+      });
+
+      // clear input
+      setZoneInputs(prev => ({
+        ...prev,
+        [roomId]: '',
+      }));
+
+      fetchRooms();
+
+    } catch (err) {
+
       console.error(err);
     }
   };
 
   return (
-    <div>
-      <h2>Rooms</h2>
 
-      {/* create room */}
-      <div style={{ marginBottom: 20 }}>
+    <div style={{ padding: 20 }}>
+
+      <h1>Rooms</h1>
+
+      {/* CREATE ROOM */}
+
+      <div style={{ marginBottom: 30 }}>
+
         <input
           type="text"
           placeholder="New room name"
           value={newRoom}
-          onChange={(e) => setNewRoom(e.target.value)}
+          onChange={(e) =>
+            setNewRoom(e.target.value)
+          }
         />
 
-        <button onClick={createRoom}>
+        <button
+          onClick={createRoom}
+          style={{ marginLeft: 10 }}
+        >
           Add Room
         </button>
+
       </div>
 
-      {rooms.map((room, index) => (
-        <React.Fragment key={room.id}>
+      {/* ROOM CARDS */}
 
-        <Rect
-          x={50 + index * 250}
-          y={80}
-          width={room.width / 2}
-          height={room.height / 2}
-          stroke="black"
-          strokeWidth={2}
-          fill="#f3f4f6"
-        />
+      {rooms.map(room => (
 
-        <Text
-          x={60 + index * 250}
-          y={90}
-          text={room.name}
-          fontSize={20}
-        />
+        <div
+          key={room.id}
+          style={{
+            border: '1px solid gray',
+            padding: 15,
+            marginBottom: 15,
+            borderRadius: 8,
+          }}
+        >
 
-        </React.Fragment>
-        ))}
+          <h2>{room.name}</h2>
 
-      {/* visual list konva */}
-        <hr />
+          <p>
+            Size: {room.width} × {room.height}
+          </p>
 
-        <h2>Visual Layout</h2>
+          <p>
+            Zones: {room.zones.length}
+          </p>
 
-        <RoomCanvas rooms={rooms} />
+          {/* CREATE ZONE */}
+
+          <div style={{ marginTop: 10 }}>
+
+            <input
+              type="text"
+              placeholder="New zone name"
+              value={zoneInputs[room.id] || ''}
+
+              onChange={(e) =>
+
+                setZoneInputs(prev => ({
+                  ...prev,
+                  [room.id]: e.target.value,
+                }))
+              }
+            />
+
+            <button
+              onClick={() =>
+                createZone(room.id)
+              }
+
+              style={{ marginLeft: 10 }}
+            >
+              Add Zone
+            </button>
+
+          </div>
+
+        </div>
+      ))}
+
+      <hr />
+
+      <h2>Visual Layout</h2>
+
+      <RoomCanvas
+        rooms={rooms}
+        setRooms={setRooms}
+      />
+
     </div>
-    
-    
   );
-  
-  
 }
-
 
 export default RoomsPage;

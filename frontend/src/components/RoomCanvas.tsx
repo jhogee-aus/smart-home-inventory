@@ -1,5 +1,36 @@
 import React from 'react';
 import { Stage, Layer, Rect, Text } from 'react-konva';
+import API from '../services/api';
+
+function isOverlapping(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  zones: Zone[],
+  currentZoneId: number
+) {
+
+  return zones.some(z => {
+
+    if (z.id === currentZoneId) return false;
+
+    return (
+      x < z.pos_x + z.width &&
+      x + width > z.pos_x &&
+      y < z.pos_y + z.height &&
+      y + height > z.pos_y
+    );
+  });
+}
+
+function clamp(
+  value: number,
+  min: number,
+  max: number
+) {
+  return Math.max(min, Math.min(value, max));
+}
 
 interface Zone {
   id: number;
@@ -21,9 +52,10 @@ interface Room {
 
 interface Props {
   rooms: Room[];
+  setRooms: React.Dispatch<React.SetStateAction<Room[]>>;
 }
 
-function RoomCanvas({ rooms }: Props) {
+function RoomCanvas({ rooms, setRooms }: Props) {
   return (
     <Stage width={1200} height={700}>
       <Layer>
@@ -60,10 +92,97 @@ function RoomCanvas({ rooms }: Props) {
                   <Rect
                     x={roomX + zone.pos_x}
                     y={roomY + zone.pos_y}
+
                     width={zone.width}
                     height={zone.height}
+
                     fill="#93c5fd"
                     stroke="black"
+
+                    draggable
+
+                    onDragEnd={async (e) => {
+                                        
+                      let newX = e.target.x() - roomX;
+                      let newY = e.target.y() - roomY;
+                                        
+                      // ROOM BOUNDARY LIMITS
+                      const maxX =
+                        room.width / 2 - zone.width;
+                                        
+                      const maxY =
+                        room.height / 2 - zone.height;
+                                        
+                      // clamp inside room
+                      newX = clamp(newX, 0, maxX);
+                      newY = clamp(newY, 0, maxY);
+                                        
+                      // snap visually to clamped position
+                      e.target.position({
+                        x: roomX + newX,
+                        y: roomY + newY,
+                      });
+                    
+                      // OVERLAP CHECK
+                      const overlap = isOverlapping(
+                        newX,
+                        newY,
+                        zone.width,
+                        zone.height,
+                        room.zones,
+                        zone.id
+                      );
+                    
+                      // reject overlap
+                      if (overlap) {
+                      
+                        e.target.position({
+                          x: roomX + zone.pos_x,
+                          y: roomY + zone.pos_y,
+                        });
+                      
+                        return;
+                      }
+                    
+                      // LIVE STATE UPDATE
+                      setRooms(prevRooms =>
+                        prevRooms.map(r => {
+                        
+                          if (r.id !== room.id) return r;
+                        
+                          return {
+                            ...r,
+                          
+                            zones: r.zones.map(z => {
+                            
+                              if (z.id !== zone.id) return z;
+                            
+                              return {
+                                ...z,
+                                pos_x: newX,
+                                pos_y: newY,
+                              };
+                            }),
+                          };
+                        })
+                      );
+                    
+                      // SAVE TO DATABASE
+                      try {
+                      
+                        await API.put(
+                          `/zones/${zone.id}/position`,
+                          {
+                            pos_x: newX,
+                            pos_y: newY,
+                          }
+                        );
+                      
+                      } catch (err) {
+                      
+                        console.error(err);
+                      }
+                    }}
                   />
 
                   <Text
