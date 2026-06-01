@@ -30,9 +30,20 @@ function RoomsPage() {
 
   const [newRoom, setNewRoom] = useState('');
 
+  const [items, setItems] = useState<any[]>([]);
+
+  const [newItem, setNewItem] = useState('');
+
+  const [selectedZone, setSelectedZone] =
+  useState<any>(null);
+
   const [zoneInputs, setZoneInputs] = useState<{
     [roomId: number]: string;
   }>({});
+
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
   // FETCH ROOMS + ZONES
   const fetchRooms = async () => {
@@ -84,11 +95,37 @@ function RoomsPage() {
     }
   };
 
+  const fetchItems = async () => {
+
+    if (!selectedZone) return;
+
+    try {
+
+      const res = await API.get(
+        `/items/${selectedZone.id}`
+      );
+
+      setItems(res.data);
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
 
     fetchRooms();
 
   }, []);
+
+  useEffect(() => {
+
+    if (!selectedZone) return;
+
+    fetchItems();
+
+  }, [selectedZone]);
 
   // CREATE ROOM
   const createRoom = async () => {
@@ -112,6 +149,7 @@ function RoomsPage() {
       console.error(err);
     }
   };
+
 
   // CREATE ZONE
   const createZone = async (roomId: number) => {
@@ -141,6 +179,51 @@ function RoomsPage() {
 
     } catch (err) {
 
+      console.error(err);
+    }
+  };
+
+  const searchItems = async () => {
+
+    if (!searchTerm.trim()) return;
+
+    try {
+
+      const res = await API.get(
+        `/search?q=${searchTerm}`
+      );
+
+      setSearchResults(res.data.results);
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
+
+  const createItem = async () => {
+    
+    if (!selectedZone) return;
+    
+    if (!newItem.trim()) return;
+    
+    try {
+    
+      await API.post(
+        `/items/${selectedZone.id}`,
+        {
+          name: newItem,
+          description: '',
+          quantity: 1,
+        }
+      );
+    
+      setNewItem('');
+    
+      fetchItems();
+    
+    } catch (err) {
+    
       console.error(err);
     }
   };
@@ -232,15 +315,150 @@ function RoomsPage() {
 
       <hr />
 
+      <hr />
+
+      <h2>Search</h2>
+
+      <input
+        type="text"
+        placeholder="Find item..."
+        value={searchTerm}
+        onChange={(e) =>
+          setSearchTerm(e.target.value)
+        }
+      />
+
+      <button
+        onClick={searchItems}
+      >
+        Search
+      </button>
+
       <h2>Visual Layout</h2>
 
       <RoomCanvas
         rooms={rooms}
         setRooms={setRooms}
+        setSelectedZone={setSelectedZone}
       />
 
+      <hr />
+
+      <h2>Selected Zone</h2>
+          
+      {selectedZone ? (
+      
+        <div
+          style={{
+            border: '1px solid gray',
+            padding: 15,
+            borderRadius: 8,
+            maxWidth: 500,
+          }}
+        >
+      
+          <h3>{selectedZone.name}</h3>
+        
+          <p>
+            Type: {selectedZone.type}
+          </p>
+        
+          <p>
+            Width: {selectedZone.width}
+          </p>
+        
+          <p>
+            Height: {selectedZone.height}
+          </p>
+        
+          <p>
+            Zone ID: {selectedZone.id}
+          </p>
+        
+          <hr />
+        
+          <h3>Items</h3>
+        
+          <div
+            style={{
+              display: 'flex',
+              gap: 10,
+              marginBottom: 10,
+            }}
+          >
+      
+            <input
+              type="text"
+              placeholder="Item name"
+              value={newItem}
+              onChange={(e) =>
+                setNewItem(e.target.value)
+              }
+            />
+      
+            <button
+              onClick={createItem}
+            >
+              Add Item
+            </button>
+            
+          </div>
+            
+          {items.length === 0 ? (
+          
+            <p>No items yet</p>
+          
+          ) : (
+          
+            <ul>
+      
+              {items.map(item => (
+              
+                <li key={item.id}>
+                  {item.name}
+                </li>
+      
+              ))}
+      
+            </ul>
+      
+          )}
+      
+        </div>
+      
+      ) : (
+      
+        <p>
+          Click a zone to view details
+        </p>
+      
+      )}
+      <ul>
+          
+        {searchResults.map(result => (
+        
+          <li key={result.item_id}>
+          
+            {result.item_name}
+        
+            {' → '}
+        
+            {result.room_name}
+        
+            {' / '}
+        
+            {result.zone_name}
+        
+          </li>
+      
+        ))}
+      
+      </ul>
     </div>
+    
   );
 }
+
+
 
 export default RoomsPage;

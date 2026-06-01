@@ -52,10 +52,14 @@ interface Room {
 
 interface Props {
   rooms: Room[];
-  setRooms: React.Dispatch<React.SetStateAction<Room[]>>;
+  setRooms: React.Dispatch<
+    React.SetStateAction<Room[]>
+  >;
+
+  setSelectedZone: (zone: any) => void;
 }
 
-function RoomCanvas({ rooms, setRooms }: Props) {
+function RoomCanvas({ rooms, setRooms, setSelectedZone }: Props) {
   return (
     <Stage width={1200} height={700}>
       <Layer>
@@ -98,6 +102,19 @@ function RoomCanvas({ rooms, setRooms }: Props) {
 
                     fill="#93c5fd"
                     stroke="black"
+
+                    onClick={() => {
+
+                      setSelectedZone({
+                        id: zone.id,
+                        name: zone.name,
+                        type: zone.type,
+                        width: zone.width,
+                        height: zone.height,
+                        roomId: room.id,
+                      });
+                    
+                    }}
 
                     draggable
 
@@ -183,6 +200,7 @@ function RoomCanvas({ rooms, setRooms }: Props) {
                         console.error(err);
                       }
                     }}
+                    
                   />
 
                   <Text
