@@ -6,6 +6,6 @@ const controller = require('../controllers/itemsController');
 router.post('/:zoneId', controller.createItem);
 
 // Get items in a zone
-router.get('/zone/:zoneId', controller.getItemsByZone);
+router.get('/:zoneId', controller.getItemsByZone);
 
 module.exports = router;

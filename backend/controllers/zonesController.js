@@ -44,3 +44,30 @@ exports.getZonesByRoom = (req, res) => {
     }
   );
 };
+
+//update position while dragged
+exports.updateZonePosition = (req, res) => {
+  const { zoneId } = req.params;
+
+  const { pos_x, pos_y } = req.body;
+
+  db.run(
+    `
+    UPDATE zones
+    SET pos_x = ?, pos_y = ?
+    WHERE id = ?
+    `,
+    [pos_x, pos_y, zoneId],
+    function (err) {
+      if (err) {
+        return res.status(400).json({
+          error: err.message,
+        });
+      }
+
+      res.json({
+        success: true,
+      });
+    }
+  );
+};

@@ -42,10 +42,18 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      zone_id INTEGER,
-      name TEXT,
+
+      zone_id INTEGER NOT NULL,
+        
+      name TEXT NOT NULL,
       description TEXT,
-      quantity INTEGER
+        
+      quantity INTEGER DEFAULT 1,
+        
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        
+      FOREIGN KEY(zone_id)
+      REFERENCES zones(id)
     )
   `);
 });
