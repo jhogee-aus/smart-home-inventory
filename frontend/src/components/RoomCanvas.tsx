@@ -57,9 +57,11 @@ interface Props {
   >;
 
   setSelectedZone: (zone: any) => void;
+
+  highlightedZoneId: number | null;
 }
 
-function RoomCanvas({ rooms, setRooms, setSelectedZone }: Props) {
+function RoomCanvas({ rooms, setRooms, setSelectedZone, highlightedZoneId }: Props) {
   return (
     <Stage width={1200} height={700}>
       <Layer>
@@ -92,15 +94,25 @@ function RoomCanvas({ rooms, setRooms, setSelectedZone }: Props) {
               {/* ZONES */}
               {room.zones.map(zone => (
                 <React.Fragment key={zone.id}>
-
-                  <Rect
+                  <div style={{
+            border: '1px solid gray',
+            padding: 15,
+            marginBottom: 15,
+            borderRadius: 8,
+          }}>
+                    <Rect
                     x={roomX + zone.pos_x}
                     y={roomY + zone.pos_y}
 
                     width={zone.width}
                     height={zone.height}
 
-                    fill="#93c5fd"
+                    //change fill color while searched
+                    fill={
+                      highlightedZoneId === zone.id
+                        ? '#facc15'
+                        : '#93c5fd'
+                    }
                     stroke="black"
 
                     onClick={() => {
@@ -202,6 +214,8 @@ function RoomCanvas({ rooms, setRooms, setSelectedZone }: Props) {
                     }}
                     
                   />
+                  </div>
+                  
 
                   <Text
                     x={roomX + zone.pos_x + 5}

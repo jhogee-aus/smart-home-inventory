@@ -45,6 +45,8 @@ function RoomsPage() {
 
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
+  const [highlightedZoneId, setHighlightedZoneId] = useState<number | null>(null);
+
   // FETCH ROOMS + ZONES
   const fetchRooms = async () => {
 
@@ -315,8 +317,6 @@ function RoomsPage() {
 
       <hr />
 
-      <hr />
-
       <h2>Search</h2>
 
       <input
@@ -334,12 +334,75 @@ function RoomsPage() {
         Search
       </button>
 
+      <ul>
+          
+        {searchResults.map(result => (
+        
+          <li
+              key={result.item_id}
+              style={{
+                cursor: 'pointer',
+                marginBottom: 10,
+              }}
+              onClick={() => {
+              
+                setHighlightedZoneId(
+                  result.zone_id
+                );
+              
+                const room = rooms.find(
+                  r => r.id === result.room_id
+                );
+              
+                const zone = room?.zones.find(
+                  z => z.id === result.zone_id
+                );
+              
+                if (zone) {
+                
+                  setSelectedZone({
+                    id: zone.id,
+                    name: zone.name,
+                    type: zone.type,
+                    width: zone.width,
+                    height: zone.height,
+                    roomId: room?.id,
+                  });
+                }
+              
+                // Remove highlight after 3 sec
+                setTimeout(() => {
+                
+                  setHighlightedZoneId(null);
+                
+                }, 3000);
+              
+              }}
+            >
+          
+            {result.item_name}
+        
+            {' → '}
+        
+            {result.room_name}
+        
+            {' / '}
+        
+            {result.zone_name}
+        
+          </li>
+      
+        ))}
+      
+      </ul>
+
       <h2>Visual Layout</h2>
 
       <RoomCanvas
         rooms={rooms}
         setRooms={setRooms}
         setSelectedZone={setSelectedZone}
+        highlightedZoneId={highlightedZoneId}
       />
 
       <hr />
@@ -433,27 +496,6 @@ function RoomsPage() {
         </p>
       
       )}
-      <ul>
-          
-        {searchResults.map(result => (
-        
-          <li key={result.item_id}>
-          
-            {result.item_name}
-        
-            {' → '}
-        
-            {result.room_name}
-        
-            {' / '}
-        
-            {result.zone_name}
-        
-          </li>
-      
-        ))}
-      
-      </ul>
     </div>
     
   );
