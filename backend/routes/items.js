@@ -8,4 +8,8 @@ router.post('/:zoneId', controller.createItem);
 // Get items in a zone
 router.get('/:zoneId', controller.getItemsByZone);
 
+router.put('/:itemId', controller.updateItem);
+
+router.delete('/:itemId', controller.deleteItem);
+
 module.exports = router;

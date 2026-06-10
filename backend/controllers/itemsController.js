@@ -43,3 +43,69 @@ exports.getItemsByZone = (req, res) => {
     }
   );
 };
+
+exports.deleteItem = (req, res) => {
+
+  const { itemId } = req.params;
+
+  db.run(
+    `
+    DELETE FROM items
+    WHERE id = ?
+    `,
+    [itemId],
+    function(err) {
+
+      if (err) {
+
+        return res.status(400).json({
+          error: err.message
+        });
+
+      }
+
+      res.json({
+        success: true
+      });
+    }
+  );
+};
+
+exports.updateItem = (req, res) => {
+
+  const { itemId } = req.params;
+
+  const {
+    name,
+    quantity
+  } = req.body;
+
+  db.run(
+    `
+    UPDATE items
+    SET
+      name = ?,
+      quantity = ?
+    WHERE id = ?
+    `,
+    [
+      name,
+      quantity,
+      itemId
+    ],
+    function(err) {
+
+      if (err) {
+
+        return res.status(400).json({
+          error: err.message
+        });
+
+      }
+
+      res.json({
+        success: true
+      });
+    }
+  );
+};
