@@ -32,6 +32,10 @@ function RoomsPage() {
 
   const [items, setItems] = useState<any[]>([]);
 
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+
+  const [editItemName, setEditItemName] = useState('');
+
   const [newItem, setNewItem] = useState('');
 
   const [selectedZone, setSelectedZone] =
@@ -226,6 +230,48 @@ function RoomsPage() {
     
     } catch (err) {
     
+      console.error(err);
+    }
+  };
+
+  const updateItem = async (
+    itemId: number
+  ) => {
+
+    try {
+
+      await API.put(
+        `/items/${itemId}`,
+        {
+          name: editItemName,
+          quantity: 1,
+        }
+      );
+
+      setEditingItemId(null);
+
+      fetchItems();
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
+
+  const deleteItem = async (
+    itemId: number
+  ) => {
+
+    try {
+
+      await API.delete(
+        `/items/${itemId}`
+      );
+
+      fetchItems();
+
+    } catch (err) {
+
       console.error(err);
     }
   };
@@ -477,8 +523,74 @@ function RoomsPage() {
       
               {items.map(item => (
               
-                <li key={item.id}>
-                  {item.name}
+                <li
+                  key={item.id}
+                  style={{
+                    display: 'flex',
+                    gap: 10,
+                    marginBottom: 5,
+                  }}
+                >
+                
+                  {editingItemId === item.id ? (
+                                    
+                    <>
+                  
+                      <input
+                        value={editItemName}
+                        onChange={(e) =>
+                          setEditItemName(
+                            e.target.value
+                          )
+                        }
+                      />
+                  
+                      <button
+                        onClick={() =>
+                          updateItem(item.id)
+                        }
+                      >
+                        Save
+                      </button>
+                      
+                    </>
+                  
+                  ) : (
+                  
+                    <>
+                  
+                      <span>
+                        {item.name}
+                      </span>
+                  
+                      <button
+                        onClick={() => {
+                        
+                          setEditingItemId(
+                            item.id
+                          );
+                        
+                          setEditItemName(
+                            item.name
+                          );
+                        
+                        }}
+                      >
+                        Edit
+                      </button>
+                      
+                    </>
+                  
+                  )}
+                
+                  <button
+                    onClick={() =>
+                      deleteItem(item.id)
+                    }
+                  >
+                    Delete
+                  </button>
+                  
                 </li>
       
               ))}
