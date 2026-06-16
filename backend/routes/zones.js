@@ -9,6 +9,10 @@ router.post('/:roomId', controller.createZone);
 // Get all zones for a room
 router.get('/room/:roomId', controller.getZonesByRoom);
 
+router.put('/:zoneId', controller.updateZone);
+
 router.put('/:zoneId/position', controller.updateZonePosition);
+
+router.delete('/:zoneId', controller.deleteZone);
 
 module.exports = router;

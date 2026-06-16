@@ -71,3 +71,82 @@ exports.updateZonePosition = (req, res) => {
     }
   );
 };
+
+//item will be deleted before zone deleted
+exports.deleteZone = (req, res) => {
+
+  const { zoneId } = req.params;
+
+  db.run(
+    `DELETE FROM items WHERE zone_id = ?`,
+    [zoneId],
+    (err) => {
+
+      if (err) {
+
+        return res.status(400).json({
+          error: err.message
+        });
+      }
+
+      db.run(
+        `
+        DELETE FROM zones
+        WHERE id = ?
+        `,
+        [zoneId],
+        function(err) {
+
+          if (err) {
+
+            return res.status(400).json({
+              error: err.message
+            });
+          }
+
+          res.json({
+            success: true
+          });
+        }
+      );
+    }
+  );
+};
+
+exports.updateZone = (req, res) => {
+
+  const { zoneId } = req.params;
+
+  const {
+    name,
+    type
+  } = req.body;
+
+  db.run(
+    `
+    UPDATE zones
+    SET
+      name = ?,
+      type = ?
+    WHERE id = ?
+    `,
+    [
+      name,
+      type,
+      zoneId
+    ],
+    function(err) {
+
+      if (err) {
+
+        return res.status(400).json({
+          error: err.message
+        });
+      }
+
+      res.json({
+        success: true
+      });
+    }
+  );
+};
