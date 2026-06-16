@@ -30,6 +30,10 @@ function RoomsPage() {
 
   const [newRoom, setNewRoom] = useState('');
 
+  const [editingZone, setEditingZone] = useState(false);
+
+  const [editZoneName, setEditZoneName] = useState('');
+
   const [items, setItems] = useState<any[]>([]);
 
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
@@ -180,6 +184,63 @@ function RoomsPage() {
         ...prev,
         [roomId]: '',
       }));
+
+      fetchRooms();
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
+
+  const deleteZone = async (
+    zoneId: number
+  ) => {
+
+    try {
+
+      await API.delete(
+        `/zones/${zoneId}`
+      );
+
+      fetchRooms();
+
+      if (
+        selectedZone?.id === zoneId
+      ) {
+
+        setSelectedZone(null);
+
+        setItems([]);
+      }
+
+    } catch (err) {
+
+      console.error(err);
+    }
+  };
+
+  const updateZone = async () => {
+
+    if (!selectedZone) return;
+
+    try {
+
+      await API.put(
+        `/zones/${selectedZone.id}`,
+        {
+          name: editZoneName,
+          type: selectedZone.type,
+        }
+      );
+
+      // update sidebar immediately
+      setSelectedZone({
+        ...selectedZone,
+        name: editZoneName,
+      });
+
+      setEditingZone(false);
 
       fetchRooms();
 
@@ -456,17 +517,85 @@ function RoomsPage() {
       <h2>Selected Zone</h2>
           
       {selectedZone ? (
+            
+              <div
+                style={{
+                  border: '1px solid gray',
+                  padding: 15,
+                  borderRadius: 8,
+                  maxWidth: 500,
+                }}
+              >
+              
+                <h3>
+                  {editingZone ? (
+                  
+        <>
       
-        <div
-          style={{
-            border: '1px solid gray',
-            padding: 15,
-            borderRadius: 8,
-            maxWidth: 500,
-          }}
-        >
+          <input
+            value={editZoneName}
+            onChange={(e) =>
+              setEditZoneName(
+                e.target.value
+              )
+            }
+          />
       
-          <h3>{selectedZone.name}</h3>
+          <button
+            onClick={updateZone}
+          >
+            Save
+          </button>
+          
+        </>
+      
+      ) : (
+      
+        <>
+      
+          <h3>
+            {selectedZone.name}
+          </h3>
+      
+          <button
+            onClick={() => {
+            
+              setEditingZone(true);
+            
+              setEditZoneName(
+                selectedZone.name
+              );
+            }}
+          >
+            Edit Zone
+          </button>
+          
+        </>
+      
+      )}
+            <button
+              style={{
+                background: 'red',
+                color: 'white',
+                marginBottom: 10,
+              }}
+              onClick={() => {
+              
+                if (
+                  window.confirm(
+                    'Delete this zone?'
+                  )
+                ) {
+                
+                  deleteZone(
+                    selectedZone.id
+                  );
+                }
+              }}
+            >
+              Delete Zone
+            </button>
+          </h3>
         
           <p>
             Type: {selectedZone.type}
