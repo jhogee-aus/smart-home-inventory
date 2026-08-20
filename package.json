@@ -1,0 +1,51 @@
+{
+  "name": "smart-home-inventory",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local, offline home inventory manager.",
+  "author": "Smart Home Inventory",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:electron": "electron .",
+    "build:frontend": "npm run build --prefix frontend",
+    "dist": "npm run build:frontend && electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.20"
+  },
+  "build": {
+    "appId": "com.smarthomeinventory.app",
+    "productName": "Smart Home Inventory",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**",
+      "backend/**",
+      "!backend/database.db",
+      "!backend/node_modules/.cache",
+      "frontend/dist/**"
+    ],
+    "asarUnpack": [
+      "**/node_modules/sqlite3/**"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://REPLACE-WITH-YOUR-DOMAIN.com/updates/win"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
