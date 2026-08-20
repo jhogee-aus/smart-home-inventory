@@ -34,3 +34,69 @@ exports.getHomes = (req, res) => {
     res.json(rows);
   });
 };
+
+// DELETE home (and all rooms/zones/items belonging to it)
+exports.deleteHome = (req, res) => {
+  const { homeId } = req.params;
+
+  db.get(
+    `SELECT id FROM homes WHERE id = ?`,
+    [homeId],
+    (err, home) => {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+      if (!home) {
+        return res.status(404).json({ error: 'Home not found' });
+      }
+
+      db.run(
+        `DELETE FROM items WHERE zone_id IN (
+          SELECT zones.id FROM zones
+          JOIN rooms ON zones.room_id = rooms.id
+          WHERE rooms.home_id = ?
+        )`,
+        [homeId],
+        (err) => {
+          if (err) {
+            return res.status(400).json({ error: err.message });
+          }
+
+          db.run(
+            `DELETE FROM zones WHERE room_id IN (
+              SELECT id FROM rooms WHERE home_id = ?
+            )`,
+            [homeId],
+            (err) => {
+              if (err) {
+                return res.status(400).json({ error: err.message });
+              }
+
+              db.run(
+                `DELETE FROM rooms WHERE home_id = ?`,
+                [homeId],
+                (err) => {
+                  if (err) {
+                    return res.status(400).json({ error: err.message });
+                  }
+
+                  db.run(
+                    `DELETE FROM homes WHERE id = ?`,
+                    [homeId],
+                    function (err) {
+                      if (err) {
+                        return res.status(400).json({ error: err.message });
+                      }
+
+                      res.json({ success: true });
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+};

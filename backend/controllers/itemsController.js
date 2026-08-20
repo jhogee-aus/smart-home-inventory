@@ -1,12 +1,36 @@
 const db = require('../db/db');
 
+const zoneExists = (zoneId) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM zones WHERE id = ?`, [zoneId], (err, row) => {
+      if (err) return reject(err);
+      resolve(!!row);
+    });
+  });
+
+const itemExists = (itemId) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM items WHERE id = ?`, [itemId], (err, row) => {
+      if (err) return reject(err);
+      resolve(!!row);
+    });
+  });
+
 // CREATE item
-exports.createItem = (req, res) => {
+exports.createItem = async (req, res) => {
   const { zoneId } = req.params;
   const { name, description, quantity } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: 'Item name is required' });
+  }
+
+  try {
+    if (!(await zoneExists(zoneId))) {
+      return res.status(404).json({ error: 'Zone not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
   }
 
   db.run(
@@ -28,8 +52,16 @@ exports.createItem = (req, res) => {
 };
 
 // GET items by zone
-exports.getItemsByZone = (req, res) => {
+exports.getItemsByZone = async (req, res) => {
   const { zoneId } = req.params;
+
+  try {
+    if (!(await zoneExists(zoneId))) {
+      return res.status(404).json({ error: 'Zone not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.all(
     `SELECT * FROM items WHERE zone_id = ?`,
@@ -44,9 +76,17 @@ exports.getItemsByZone = (req, res) => {
   );
 };
 
-exports.deleteItem = (req, res) => {
+exports.deleteItem = async (req, res) => {
 
   const { itemId } = req.params;
+
+  try {
+    if (!(await itemExists(itemId))) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.run(
     `
@@ -71,7 +111,7 @@ exports.deleteItem = (req, res) => {
   );
 };
 
-exports.updateItem = (req, res) => {
+exports.updateItem = async (req, res) => {
 
   const { itemId } = req.params;
 
@@ -79,6 +119,14 @@ exports.updateItem = (req, res) => {
     name,
     quantity
   } = req.body;
+
+  try {
+    if (!(await itemExists(itemId))) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.run(
     `

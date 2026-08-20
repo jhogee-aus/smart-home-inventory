@@ -1,8 +1,10 @@
 const sqlite3 = require('sqlite3').verbose();
 
-const db = new sqlite3.Database('./database.db', (err) => {
+const dbPath = process.env.DB_PATH || './database.db';
+
+const db = new sqlite3.Database(dbPath, (err) => {
   if (err) console.error(err.message);
-  console.log('Connected to SQLite database.');
+  console.log('Connected to SQLite database at', dbPath);
 });
 
 // Create tables
@@ -44,14 +46,14 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
 
       zone_id INTEGER NOT NULL,
-        
+
       name TEXT NOT NULL,
       description TEXT,
-        
+
       quantity INTEGER DEFAULT 1,
-        
+
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        
+
       FOREIGN KEY(zone_id)
       REFERENCES zones(id)
     )

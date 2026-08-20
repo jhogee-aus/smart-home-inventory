@@ -1,3 +1,8 @@
 node_modules/
 .env
-database.dbgit add .
+database.db
+frontend/dist/
+release/
+website/downloads/*.exe
+website/updates/win/*.exe
+website/updates/win/latest.yml

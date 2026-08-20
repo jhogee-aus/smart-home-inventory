@@ -1,12 +1,36 @@
 const db = require('../db/db');
 
+const homeExists = (homeId) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM homes WHERE id = ?`, [homeId], (err, row) => {
+      if (err) return reject(err);
+      resolve(!!row);
+    });
+  });
+
+const roomExists = (roomId) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM rooms WHERE id = ?`, [roomId], (err, row) => {
+      if (err) return reject(err);
+      resolve(!!row);
+    });
+  });
+
 // CREATE room
-exports.createRoom = (req, res) => {
+exports.createRoom = async (req, res) => {
   const { homeId } = req.params;
   const { name, width, height, pos_x, pos_y } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: 'Room name is required' });
+  }
+
+  try {
+    if (!(await homeExists(homeId))) {
+      return res.status(404).json({ error: 'Home not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
   }
 
   db.run(
@@ -28,8 +52,16 @@ exports.createRoom = (req, res) => {
 };
 
 // GET rooms by home
-exports.getRoomsByHome = (req, res) => {
+exports.getRoomsByHome = async (req, res) => {
   const { homeId } = req.params;
+
+  try {
+    if (!(await homeExists(homeId))) {
+      return res.status(404).json({ error: 'Home not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.all(
     `SELECT * FROM rooms WHERE home_id = ?`,
@@ -45,8 +77,16 @@ exports.getRoomsByHome = (req, res) => {
 };
 
 // GET ROOMS WITH ZONES
-exports.getRoomsWithZones = (req, res) => {
+exports.getRoomsWithZones = async (req, res) => {
   const { homeId } = req.params;
+
+  try {
+    if (!(await homeExists(homeId))) {
+      return res.status(404).json({ error: 'Home not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.all(
     `
@@ -79,6 +119,53 @@ exports.getRoomsWithZones = (req, res) => {
       }
 
       res.json(rows);
+    }
+  );
+};
+
+// DELETE room (and all zones/items belonging to it)
+exports.deleteRoom = async (req, res) => {
+  const { roomId } = req.params;
+
+  try {
+    if (!(await roomExists(roomId))) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
+  db.run(
+    `DELETE FROM items WHERE zone_id IN (
+      SELECT id FROM zones WHERE room_id = ?
+    )`,
+    [roomId],
+    (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+
+      db.run(
+        `DELETE FROM zones WHERE room_id = ?`,
+        [roomId],
+        (err) => {
+          if (err) {
+            return res.status(400).json({ error: err.message });
+          }
+
+          db.run(
+            `DELETE FROM rooms WHERE id = ?`,
+            [roomId],
+            function (err) {
+              if (err) {
+                return res.status(400).json({ error: err.message });
+              }
+
+              res.json({ success: true });
+            }
+          );
+        }
+      );
     }
   );
 };

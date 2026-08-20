@@ -1,12 +1,36 @@
 const db = require('../db/db');
 
+const roomExists = (roomId) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM rooms WHERE id = ?`, [roomId], (err, row) => {
+      if (err) return reject(err);
+      resolve(!!row);
+    });
+  });
+
+const zoneExists = (zoneId) =>
+  new Promise((resolve, reject) => {
+    db.get(`SELECT id FROM zones WHERE id = ?`, [zoneId], (err, row) => {
+      if (err) return reject(err);
+      resolve(!!row);
+    });
+  });
+
 // CREATE zone
-exports.createZone = (req, res) => {
+exports.createZone = async (req, res) => {
   const { roomId } = req.params;
   const { name, type, width, height, pos_x, pos_y } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: 'Zone name is required' });
+  }
+
+  try {
+    if (!(await roomExists(roomId))) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
   }
 
   db.run(
@@ -29,8 +53,16 @@ exports.createZone = (req, res) => {
 };
 
 // GET zones by room
-exports.getZonesByRoom = (req, res) => {
+exports.getZonesByRoom = async (req, res) => {
   const { roomId } = req.params;
+
+  try {
+    if (!(await roomExists(roomId))) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.all(
     `SELECT * FROM zones WHERE room_id = ?`,
@@ -46,10 +78,18 @@ exports.getZonesByRoom = (req, res) => {
 };
 
 //update position while dragged
-exports.updateZonePosition = (req, res) => {
+exports.updateZonePosition = async (req, res) => {
   const { zoneId } = req.params;
 
   const { pos_x, pos_y } = req.body;
+
+  try {
+    if (!(await zoneExists(zoneId))) {
+      return res.status(404).json({ error: 'Zone not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.run(
     `
@@ -73,9 +113,17 @@ exports.updateZonePosition = (req, res) => {
 };
 
 //item will be deleted before zone deleted
-exports.deleteZone = (req, res) => {
+exports.deleteZone = async (req, res) => {
 
   const { zoneId } = req.params;
+
+  try {
+    if (!(await zoneExists(zoneId))) {
+      return res.status(404).json({ error: 'Zone not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.run(
     `DELETE FROM items WHERE zone_id = ?`,
@@ -113,7 +161,7 @@ exports.deleteZone = (req, res) => {
   );
 };
 
-exports.updateZone = (req, res) => {
+exports.updateZone = async (req, res) => {
 
   const { zoneId } = req.params;
 
@@ -121,6 +169,14 @@ exports.updateZone = (req, res) => {
     name,
     type
   } = req.body;
+
+  try {
+    if (!(await zoneExists(zoneId))) {
+      return res.status(404).json({ error: 'Zone not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
 
   db.run(
     `
@@ -142,6 +198,7 @@ exports.updateZone = (req, res) => {
         return res.status(400).json({
           error: err.message
         });
+
       }
 
       res.json({
