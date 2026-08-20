@@ -9,11 +9,12 @@
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:electron": "electron .",
     "build:frontend": "npm run build --prefix frontend",
-    "dist": "npm run build:frontend && electron-builder"
+    "dist": "node scripts/build-release.js"
   },
   "devDependencies": {
     "electron": "^38.4.0",
-    "electron-builder": "^26.0.20"
+    "electron-builder": "^26.0.20",
+    "javascript-obfuscator": "^5.5.0"
   },
   "build": {
     "appId": "com.smarthomeinventory.app",
