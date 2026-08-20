@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Home Inventory — know what you own, and where it is</title>
+  <meta name="description" content="A free, private, offline home inventory app for Windows. No account, no cloud — your data stays on your PC." />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap site-header__inner">
+      <a href="#top" class="brand">
+        <span class="brand__icon" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /><path d="M9 21v-6h6v6" /></svg>
+        </span>
+        Smart Home Inventory
+      </a>
+      <nav class="site-nav">
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="#changelog">Changelog</a>
+        <a href="#feedback">Feedback</a>
+        <a href="#donate">Donate</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap hero__inner">
+        <div class="hero__copy">
+          <p class="eyebrow">Free · Private · Runs on your PC</p>
+          <h1>Know what you own, and exactly where it is.</h1>
+          <p class="hero__lede">
+            Smart Home Inventory is a small desktop app for cataloguing everything in your home —
+            room by room, shelf by shelf. No account, no cloud, no subscription. Everything lives
+            in a single file on your own computer.
+          </p>
+          <div class="hero__actions">
+            <a href="#download" class="btn btn--primary">Download for Windows</a>
+            <a href="#features" class="btn btn--ghost">See how it works</a>
+          </div>
+        </div>
+        <div class="hero__media">
+          <img src="assets/screenshot-homes.png" alt="Smart Home Inventory homes screen" loading="lazy" />
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="section">
+      <div class="wrap">
+        <h2>Built for people who like their home organized</h2>
+        <p class="section__lede">Whether you're moving, insuring your belongings, or just tired of forgetting where you put things.</p>
+
+        <div class="feature-grid">
+          <div class="feature-card">
+            <h3>Home → Room → Zone → Item</h3>
+            <p>Structure your inventory the way you actually think about your space — down to the specific drawer or shelf an item lives on.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Visual room layout</h3>
+            <p>Drag zones around a canvas that mirrors your real room, so finding something is as easy as glancing at a map.</p>
+          </div>
+          <div class="feature-card">
+            <h3>Search everything, instantly</h3>
+            <p>Type an item's name and jump straight to the room and zone it's stored in — across every home you've catalogued.</p>
+          </div>
+          <div class="feature-card">
+            <h3>100% local &amp; private</h3>
+            <p>No sign-up, no tracking, no server. Your inventory is a single file on your own PC that only you can see.</p>
+          </div>
+        </div>
+
+        <div class="showcase">
+          <img src="assets/screenshot-rooms.png" alt="Smart Home Inventory room layout screen" loading="lazy" />
+        </div>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section id="download" class="section section--accent">
+      <div class="wrap download">
+        <div>
+          <h2>Download</h2>
+          <p class="section__lede">Free for personal use. Windows 10/11, 64-bit.</p>
+
+          <a href="downloads/Smart-Home-Inventory-Setup-latest.exe" class="btn btn--primary btn--lg">
+            Download for Windows
+            <span class="btn__meta">v1.0.0 · ~100&nbsp;MB</span>
+          </a>
+
+          <p class="fineprint">
+            The installer isn't code-signed yet, so Windows SmartScreen may show a warning
+            the first time you run it. Click <strong>"More info"</strong> → <strong>"Run anyway"</strong>
+            to continue — this is normal for small, independently-published apps.
+          </p>
+        </div>
+
+        <div class="download__steps">
+          <h3>After installing</h3>
+          <ol>
+            <li>Open Smart Home Inventory from your Start menu.</li>
+            <li>Add your first home, then rooms, then zones.</li>
+            <li>The in-app tour (tap the <strong>?</strong> button) walks you through the rest.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHANGELOG -->
+    <section id="changelog" class="section">
+      <div class="wrap">
+        <h2>Changelog</h2>
+        <p class="section__lede">The app checks for new versions automatically — you'll see a prompt in the top bar when one's ready.</p>
+
+        <ul class="changelog">
+          <li class="changelog__entry">
+            <div class="changelog__version">v1.0.0 <span class="changelog__date">Initial release</span></div>
+            <ul>
+              <li>Homes, rooms, zones, and items with a drag-and-drop visual layout</li>
+              <li>Instant search across your whole inventory</li>
+              <li>Guided first-run tour</li>
+              <li>Fully offline — data stored locally in SQLite</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FEEDBACK -->
+    <section id="feedback" class="section section--accent">
+      <div class="wrap two-col">
+        <div>
+          <h2>Feedback</h2>
+          <p>
+            This is a solo hobby project — bug reports, feature ideas, and "this confused me" notes
+            are all genuinely useful. I read everything.
+          </p>
+          <a
+            class="btn btn--primary"
+            href="mailto:jhogee6078@gmail.com?subject=Smart%20Home%20Inventory%20Feedback&body=What%20happened%3A%0A%0AWhat%20I%20expected%3A%0A%0AApp%20version%3A%20"
+          >
+            Send Feedback
+          </a>
+        </div>
+        <div>
+          <h3>Good bug reports include</h3>
+          <ul class="checklist">
+            <li>What you were trying to do</li>
+            <li>What happened instead</li>
+            <li>The app version (shown next to the update button)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- DONATE -->
+    <section id="donate" class="section">
+      <div class="wrap donate">
+        <h2>Support the project</h2>
+        <p class="section__lede">
+          Smart Home Inventory is free and always will be. If it's saved you time or a headache,
+          a small donation helps keep it maintained — but it's never required.
+        </p>
+        <div class="donate__buttons">
+          <a href="https://ko-fi.com/REPLACE-WITH-YOUR-USERNAME" class="btn btn--donate">Buy me a coffee on Ko-fi</a>
+          <a href="https://www.paypal.com/donate/?hosted_button_id=REPLACE-WITH-YOUR-ID" class="btn btn--ghost">Donate via PayPal</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section section--accent">
+      <div class="wrap">
+        <h2>Contact</h2>
+        <p>
+          Questions, ideas, or just want to say hi? Reach me directly at
+          <a href="mailto:jhogee6078@gmail.com">jhogee6078@gmail.com</a>.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap site-footer__inner">
+      <p>Smart Home Inventory — a free, independent hobby project.</p>
+      <a href="#top">Back to top ↑</a>
+    </div>
+  </footer>
+
+</body>
+</html>
