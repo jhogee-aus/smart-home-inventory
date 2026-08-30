@@ -4,9 +4,7 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
-// TODO: replace with the real URL once the download site is live, e.g.
-// 'https://your-domain.com/updates/win'
-const UPDATE_FEED_URL = 'https://REPLACE-WITH-YOUR-DOMAIN.com/updates/win';
+const UPDATE_FEED_URL = 'https://smart-home-inventory-mu.vercel.app/updates/win';
 
 let mainWindow;
 

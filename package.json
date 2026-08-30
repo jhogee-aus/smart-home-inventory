@@ -42,7 +42,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://REPLACE-WITH-YOUR-DOMAIN.com/updates/win"
+        "url": "https://smart-home-inventory-mu.vercel.app/updates/win"
       }
     ]
   },
