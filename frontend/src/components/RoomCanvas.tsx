@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stage, Layer, Rect, Text } from 'react-konva';
+import { Stage, Layer, Rect, Text, Group } from 'react-konva';
 import API from '../services/api';
 
 function isOverlapping(
@@ -119,11 +119,129 @@ function RoomCanvas({ rooms, setRooms, setSelectedZone, highlightedZoneId }: Pro
 
               {/* ZONES */}
               {room.zones.map(zone => (
-                <React.Fragment key={zone.id}>
-                  <Rect
-                    x={roomX + zone.pos_x}
-                    y={roomY + zone.pos_y}
+                <Group
+                  key={zone.id}
+                  x={roomX + zone.pos_x}
+                  y={roomY + zone.pos_y}
 
+                  draggable
+
+                  onClick={() => {
+
+                    setSelectedZone({
+                      id: zone.id,
+                      name: zone.name,
+                      type: zone.type,
+                      width: zone.width,
+                      height: zone.height,
+                      roomId: room.id,
+                    });
+
+                  }}
+
+                  onMouseEnter={(e) => {
+                    const stage = e.target.getStage();
+                    if (stage) stage.container().style.cursor = 'pointer';
+                  }}
+
+                  onMouseLeave={(e) => {
+                    const stage = e.target.getStage();
+                    if (stage) stage.container().style.cursor = 'default';
+                  }}
+
+                  onDragStart={(e) => {
+                    const stage = e.target.getStage();
+                    if (stage) stage.container().style.cursor = 'grabbing';
+                  }}
+
+                  onDragEnd={async (e) => {
+
+                    const stage = e.target.getStage();
+                    if (stage) stage.container().style.cursor = 'pointer';
+
+                    let newX = e.target.x() - roomX;
+                    let newY = e.target.y() - roomY;
+
+                    // ROOM BOUNDARY LIMITS
+                    const maxX =
+                      room.width / 2 - zone.width;
+
+                    const maxY =
+                      room.height / 2 - zone.height;
+
+                    // clamp inside room
+                    newX = clamp(newX, 0, maxX);
+                    newY = clamp(newY, 0, maxY);
+
+                    // snap visually to clamped position
+                    e.target.position({
+                      x: roomX + newX,
+                      y: roomY + newY,
+                    });
+
+                    // OVERLAP CHECK
+                    const overlap = isOverlapping(
+                      newX,
+                      newY,
+                      zone.width,
+                      zone.height,
+                      room.zones,
+                      zone.id
+                    );
+
+                    // reject overlap
+                    if (overlap) {
+
+                      e.target.position({
+                        x: roomX + zone.pos_x,
+                        y: roomY + zone.pos_y,
+                      });
+
+                      return;
+                    }
+
+                    // LIVE STATE UPDATE
+                    setRooms(prevRooms =>
+                      prevRooms.map(r => {
+
+                        if (r.id !== room.id) return r;
+
+                        return {
+                          ...r,
+
+                          zones: r.zones.map(z => {
+
+                            if (z.id !== zone.id) return z;
+
+                            return {
+                              ...z,
+                              pos_x: newX,
+                              pos_y: newY,
+                            };
+                          }),
+                        };
+                      })
+                    );
+
+                    // SAVE TO DATABASE
+                    try {
+
+                      await API.put(
+                        `/zones/${zone.id}/position`,
+                        {
+                          pos_x: newX,
+                          pos_y: newY,
+                        }
+                      );
+
+                    } catch (err) {
+
+                      console.error(err);
+                    }
+                  }}
+
+                >
+                  <Rect
                     width={zone.width}
                     height={zone.height}
 
@@ -141,135 +259,17 @@ function RoomCanvas({ rooms, setRooms, setSelectedZone, highlightedZoneId }: Pro
                         : '#60a5fa'
                     }
                     strokeWidth={highlightedZoneId === zone.id ? 2 : 1.5}
-
-                    onClick={() => {
-
-                      setSelectedZone({
-                        id: zone.id,
-                        name: zone.name,
-                        type: zone.type,
-                        width: zone.width,
-                        height: zone.height,
-                        roomId: room.id,
-                      });
-
-                    }}
-
-                    onMouseEnter={(e) => {
-                      const stage = e.target.getStage();
-                      if (stage) stage.container().style.cursor = 'pointer';
-                    }}
-
-                    onMouseLeave={(e) => {
-                      const stage = e.target.getStage();
-                      if (stage) stage.container().style.cursor = 'default';
-                    }}
-
-                    draggable
-
-                    onDragStart={(e) => {
-                      const stage = e.target.getStage();
-                      if (stage) stage.container().style.cursor = 'grabbing';
-                    }}
-
-                    onDragEnd={async (e) => {
-
-                      const stage = e.target.getStage();
-                      if (stage) stage.container().style.cursor = 'pointer';
-
-                      let newX = e.target.x() - roomX;
-                      let newY = e.target.y() - roomY;
-
-                      // ROOM BOUNDARY LIMITS
-                      const maxX =
-                        room.width / 2 - zone.width;
-
-                      const maxY =
-                        room.height / 2 - zone.height;
-
-                      // clamp inside room
-                      newX = clamp(newX, 0, maxX);
-                      newY = clamp(newY, 0, maxY);
-
-                      // snap visually to clamped position
-                      e.target.position({
-                        x: roomX + newX,
-                        y: roomY + newY,
-                      });
-
-                      // OVERLAP CHECK
-                      const overlap = isOverlapping(
-                        newX,
-                        newY,
-                        zone.width,
-                        zone.height,
-                        room.zones,
-                        zone.id
-                      );
-
-                      // reject overlap
-                      if (overlap) {
-
-                        e.target.position({
-                          x: roomX + zone.pos_x,
-                          y: roomY + zone.pos_y,
-                        });
-
-                        return;
-                      }
-
-                      // LIVE STATE UPDATE
-                      setRooms(prevRooms =>
-                        prevRooms.map(r => {
-
-                          if (r.id !== room.id) return r;
-
-                          return {
-                            ...r,
-
-                            zones: r.zones.map(z => {
-
-                              if (z.id !== zone.id) return z;
-
-                              return {
-                                ...z,
-                                pos_x: newX,
-                                pos_y: newY,
-                              };
-                            }),
-                          };
-                        })
-                      );
-
-                      // SAVE TO DATABASE
-                      try {
-
-                        await API.put(
-                          `/zones/${zone.id}/position`,
-                          {
-                            pos_x: newX,
-                            pos_y: newY,
-                          }
-                        );
-
-                      } catch (err) {
-
-                        console.error(err);
-                      }
-                    }}
-
                   />
 
                   <Text
-                    x={roomX + zone.pos_x + 6}
-                    y={roomY + zone.pos_y + 6}
+                    x={6}
+                    y={6}
                     text={zone.name}
                     fontSize={12}
                     fill="#1e3a8a"
                     listening={false}
                   />
-
-                </React.Fragment>
+                </Group>
               ))}
 
             </React.Fragment>
