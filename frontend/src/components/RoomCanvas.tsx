@@ -1,6 +1,7 @@
 import React from 'react';
 import { Stage, Layer, Rect, Text, Group } from 'react-konva';
 import API from '../services/api';
+import FurnitureIcon from './FurnitureIcon';
 
 function isOverlapping(
   x: number,
@@ -40,6 +41,7 @@ interface Zone {
   height: number;
   pos_x: number;
   pos_y: number;
+  attributes?: { shelves?: number; drawers?: number };
 }
 
 interface Room {
@@ -136,6 +138,7 @@ function RoomCanvas({ rooms, setRooms, setSelectedZone, highlightedZoneId }: Pro
                       type: zone.type,
                       width: zone.width,
                       height: zone.height,
+                      attributes: zone.attributes || {},
                       roomId: room.id,
                     });
 
@@ -261,6 +264,13 @@ function RoomCanvas({ rooms, setRooms, setSelectedZone, highlightedZoneId }: Pro
                         : '#60a5fa'
                     }
                     strokeWidth={highlightedZoneId === zone.id ? 2 : 1.5}
+                  />
+
+                  <FurnitureIcon
+                    type={zone.type}
+                    width={zone.width}
+                    height={zone.height}
+                    attributes={zone.attributes}
                   />
 
                   <Text

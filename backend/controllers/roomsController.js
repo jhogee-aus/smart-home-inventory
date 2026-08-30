@@ -104,7 +104,8 @@ exports.getRoomsWithZones = async (req, res) => {
       zones.width AS zone_width,
       zones.height AS zone_height,
       zones.pos_x,
-      zones.pos_y
+      zones.pos_y,
+      zones.attributes AS zone_attributes
 
     FROM rooms
     LEFT JOIN zones

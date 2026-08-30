@@ -5,6 +5,7 @@ import API from '../services/api';
 import RoomCanvas from '../components/RoomCanvas';
 import HouseCanvas from '../components/HouseCanvas';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { FURNITURE_TYPES, furnitureDef, furnitureLabel } from '../lib/furniture';
 
 interface Zone {
   id: number;
@@ -14,6 +15,7 @@ interface Zone {
   height: number;
   pos_x: number;
   pos_y: number;
+  attributes?: { shelves?: number; drawers?: number };
 }
 
 interface Room {
@@ -43,6 +45,10 @@ function RoomsPage() {
   const [editingZone, setEditingZone] = useState(false);
 
   const [editZoneName, setEditZoneName] = useState('');
+
+  const [editZoneType, setEditZoneType] = useState('box');
+
+  const [editZoneAttrValue, setEditZoneAttrValue] = useState(0);
 
   const [items, setItems] = useState<any[]>([]);
 
@@ -121,6 +127,13 @@ function RoomsPage() {
         // push zone
         if (row.zone_id) {
 
+          let attributes = {};
+          try {
+            attributes = JSON.parse(row.zone_attributes || '{}');
+          } catch {
+            attributes = {};
+          }
+
           roomMap[row.room_id].zones.push({
             id: row.zone_id,
             name: row.zone_name,
@@ -129,6 +142,7 @@ function RoomsPage() {
             height: row.zone_height,
             pos_x: row.pos_x,
             pos_y: row.pos_y,
+            attributes,
           });
         }
       });
@@ -219,7 +233,7 @@ function RoomsPage() {
 
       await API.post(`/zones/${roomId}`, {
         name: zoneName,
-        type: 'storage',
+        type: 'box',
         width: 120,
         height: 60,
         pos_x: 40,
@@ -304,13 +318,17 @@ function RoomsPage() {
 
     if (!selectedZone) return;
 
+    const attrKey = furnitureDef(editZoneType).attribute;
+    const attributes = attrKey ? { [attrKey]: editZoneAttrValue } : {};
+
     try {
 
       await API.put(
         `/zones/${selectedZone.id}`,
         {
           name: editZoneName,
-          type: selectedZone.type,
+          type: editZoneType,
+          attributes,
         }
       );
 
@@ -318,6 +336,8 @@ function RoomsPage() {
       setSelectedZone({
         ...selectedZone,
         name: editZoneName,
+        type: editZoneType,
+        attributes,
       });
 
       setEditingZone(false);
@@ -377,6 +397,7 @@ function RoomsPage() {
         type: zone.type,
         width: zone.width,
         height: zone.height,
+        attributes: zone.attributes || {},
         roomId: room?.id,
       });
     }
@@ -669,20 +690,59 @@ function RoomsPage() {
               <div>
                 <div className="mb-3 flex items-start justify-between gap-2">
                   {editingZone ? (
-                    <div className="flex flex-1 gap-2">
-                      <input
-                        value={editZoneName}
-                        onChange={(e) => setEditZoneName(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && updateZone()}
-                        className="min-h-9 flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-                        autoFocus
-                      />
-                      <button
-                        onClick={updateZone}
-                        className="min-h-9 shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
-                      >
-                        Save
-                      </button>
+                    <div className="flex flex-1 flex-col gap-2">
+                      <div className="flex gap-2">
+                        <input
+                          value={editZoneName}
+                          onChange={(e) => setEditZoneName(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && updateZone()}
+                          className="min-h-9 flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                          autoFocus
+                        />
+                        <button
+                          onClick={updateZone}
+                          className="min-h-9 shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
+                        >
+                          Save
+                        </button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <select
+                          value={editZoneType}
+                          onChange={(e) => {
+                            const newType = e.target.value;
+                            setEditZoneType(newType);
+                            const def = furnitureDef(newType);
+                            setEditZoneAttrValue(def.defaultAttributeValue ?? 0);
+                          }}
+                          className="min-h-9 flex-1 rounded-md border border-slate-200 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        >
+                          {FURNITURE_TYPES.map((f) => (
+                            <option key={f.value} value={f.value}>
+                              {f.label}
+                            </option>
+                          ))}
+                        </select>
+
+                        {furnitureDef(editZoneType).attribute && (
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            <label className="text-xs text-slate-500">
+                              {furnitureDef(editZoneType).attributeLabel}
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={20}
+                              value={editZoneAttrValue}
+                              onChange={(e) =>
+                                setEditZoneAttrValue(Math.max(0, Number(e.target.value)))
+                              }
+                              className="min-h-9 w-16 rounded-md border border-slate-200 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <>
@@ -692,6 +752,12 @@ function RoomsPage() {
                           onClick={() => {
                             setEditingZone(true);
                             setEditZoneName(selectedZone.name);
+                            const knownType = furnitureDef(selectedZone.type).value;
+                            setEditZoneType(knownType);
+                            const attrKey = furnitureDef(knownType).attribute;
+                            setEditZoneAttrValue(
+                              attrKey ? (selectedZone.attributes?.[attrKey] ?? 0) : 0
+                            );
                           }}
                           className="min-h-9 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
                         >
@@ -713,7 +779,7 @@ function RoomsPage() {
                 <dl className="mb-4 grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-3 text-center">
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-slate-400">Type</dt>
-                    <dd className="text-sm font-medium text-slate-700">{selectedZone.type}</dd>
+                    <dd className="text-sm font-medium text-slate-700">{furnitureLabel(selectedZone.type)}</dd>
                   </div>
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-slate-400">Width</dt>
@@ -723,6 +789,16 @@ function RoomsPage() {
                     <dt className="text-[11px] uppercase tracking-wide text-slate-400">Height</dt>
                     <dd className="text-sm font-medium text-slate-700">{selectedZone.height}</dd>
                   </div>
+                  {furnitureDef(selectedZone.type).attribute && (
+                    <div className="col-span-3 border-t border-slate-200 pt-2">
+                      <dt className="text-[11px] uppercase tracking-wide text-slate-400">
+                        {furnitureDef(selectedZone.type).attributeLabel}
+                      </dt>
+                      <dd className="text-sm font-medium text-slate-700">
+                        {selectedZone.attributes?.[furnitureDef(selectedZone.type).attribute as 'shelves' | 'drawers'] ?? 0}
+                      </dd>
+                    </div>
+                  )}
                 </dl>
 
                 <h4 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Items</h4>

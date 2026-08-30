@@ -37,9 +37,21 @@ db.serialize(() => {
       width REAL,
       height REAL,
       pos_x REAL,
-      pos_y REAL
+      pos_y REAL,
+      attributes TEXT DEFAULT '{}'
     )
   `);
+
+  // migrate zones created before the "attributes" column existed
+  db.all(`PRAGMA table_info(zones)`, (err, columns) => {
+    if (err) return console.error(err.message);
+
+    const hasAttributes = columns.some((c) => c.name === 'attributes');
+
+    if (!hasAttributes) {
+      db.run(`ALTER TABLE zones ADD COLUMN attributes TEXT DEFAULT '{}'`);
+    }
+  });
 
   db.run(`
     CREATE TABLE IF NOT EXISTS items (

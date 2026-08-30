@@ -19,7 +19,7 @@ const zoneExists = (zoneId) =>
 // CREATE zone
 exports.createZone = async (req, res) => {
   const { roomId } = req.params;
-  const { name, type, width, height, pos_x, pos_y } = req.body;
+  const { name, type, width, height, pos_x, pos_y, attributes } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: 'Zone name is required' });
@@ -34,9 +34,18 @@ exports.createZone = async (req, res) => {
   }
 
   db.run(
-    `INSERT INTO zones (room_id, name, type, width, height, pos_x, pos_y)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [roomId, name, type || 'box', width || 0, height || 0, pos_x || 0, pos_y || 0],
+    `INSERT INTO zones (room_id, name, type, width, height, pos_x, pos_y, attributes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      roomId,
+      name,
+      type || 'box',
+      width || 0,
+      height || 0,
+      pos_x || 0,
+      pos_y || 0,
+      JSON.stringify(attributes || {}),
+    ],
     function (err) {
       if (err) {
         return res.status(400).json({ error: err.message });
@@ -167,7 +176,8 @@ exports.updateZone = async (req, res) => {
 
   const {
     name,
-    type
+    type,
+    attributes
   } = req.body;
 
   try {
@@ -183,12 +193,14 @@ exports.updateZone = async (req, res) => {
     UPDATE zones
     SET
       name = ?,
-      type = ?
+      type = ?,
+      attributes = ?
     WHERE id = ?
     `,
     [
       name,
       type,
+      JSON.stringify(attributes || {}),
       zoneId
     ],
     function(err) {
