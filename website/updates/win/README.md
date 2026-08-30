@@ -1,19 +1,17 @@
 # Auto-update feed folder
 
-This is what the app itself checks for new versions (via the "Check for updates" button
-in the header). It's separate from the `downloads/` folder, which is only for the manual
-website download button — electron-updater reads `latest.yml`, not the webpage.
+No longer used. The app's "Check for updates" button now reads update info directly
+from **GitHub Releases** (via `electron-updater`'s built-in `github` provider), not from
+this website.
 
-Each release, copy both of these from the project's `release/` folder into this directory:
+This works because `npm run dist` embeds an `app-update.yml` into the packaged app,
+generated from the `build.publish` block in the root `package.json`:
 
+```json
+"publish": [{ "provider": "github", "owner": "jhogee-aus", "repo": "smart-home-inventory" }]
 ```
-latest.yml
-Smart Home Inventory Setup <version>.exe
-```
 
-`latest.yml` is generated automatically by `npm run dist` (electron-builder) and contains
-the version number, filename, and checksum the app uses to detect and verify updates.
-
-This folder's URL must exactly match `UPDATE_FEED_URL` in `electron/main.js` and the
-`build.publish[0].url` in the root `package.json` — e.g. if this site is deployed at
-`https://your-domain.com`, both should point to `https://your-domain.com/updates/win`.
+To ship an update: bump `version` in `package.json`, run `npm run dist`, and publish a
+new GitHub Release with the resulting `.exe`, `.blockmap`, and `latest.yml` from `release/`
+attached as assets. Existing installs pick it up next time someone clicks "Check for
+updates".

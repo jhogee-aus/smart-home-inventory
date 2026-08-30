@@ -1,23 +1,16 @@
 # Downloads folder
 
-Put the current release installer here, named exactly:
+No longer used. The installer is hosted on **GitHub Releases** instead (it's ~100 MB,
+over GitHub's regular repo file-size limit, and Releases is built for exactly this).
+
+The homepage's download button links directly to:
 
 ```
-Smart-Home-Inventory-Setup-latest.exe
+https://github.com/jhogee-aus/smart-home-inventory/releases/latest/download/Smart-Home-Inventory-Setup.exe
 ```
 
-The homepage's download button links to that fixed filename, so each new release just
-overwrites this file — no HTML changes needed. The real build comes from:
+That URL always resolves to the newest published release's asset, since `npm run dist`
+produces a fixed filename (`Smart-Home-Inventory-Setup.exe`, see `nsis.artifactName` in
+the root `package.json`) — no HTML changes needed between releases.
 
-```
-release/Smart Home Inventory Setup <version>.exe
-```
-
-(produced by `npm run dist` at the project root — see the main project README).
-
-## Heads-up: file size
-
-The installer is currently ~100 MB. Many shared-hosting plans have small per-file upload
-limits, and GitHub itself hard-blocks files over 100 MB. If your web host can't take a file
-this size, host the `.exe` on **GitHub Releases** instead (free, built for exactly this) and
-point this download button at the Release asset URL rather than this folder.
+See the main project README for how to publish a release.

@@ -37,12 +37,14 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Smart-Home-Inventory-Setup.${ext}"
     },
     "publish": [
       {
-        "provider": "generic",
-        "url": "https://smart-home-inventory-mu.vercel.app/updates/win"
+        "provider": "github",
+        "owner": "jhogee-aus",
+        "repo": "smart-home-inventory"
       }
     ]
   },

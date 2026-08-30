@@ -4,8 +4,6 @@ const path = require('path');
 
 const PORT = process.env.PORT || 3000;
 
-const UPDATE_FEED_URL = 'https://smart-home-inventory-mu.vercel.app/updates/win';
-
 let mainWindow;
 
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
@@ -69,7 +67,8 @@ function sendUpdateStatus(status) {
 
 function setupAutoUpdater() {
   autoUpdater.autoDownload = false;
-  autoUpdater.setFeedURL({ provider: 'generic', url: UPDATE_FEED_URL });
+  // Feed URL comes from app-update.yml, generated at build time from the
+  // "publish" config in package.json (GitHub Releases on this repo).
 
   autoUpdater.on('checking-for-update', () => sendUpdateStatus({ state: 'checking' }));
   autoUpdater.on('update-not-available', () => sendUpdateStatus({ state: 'up-to-date' }));
