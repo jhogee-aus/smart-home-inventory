@@ -47,6 +47,8 @@ interface Room {
   name: string;
   width: number;
   height: number;
+  pos_x: number;
+  pos_y: number;
   zones: Zone[];
 }
 

@@ -8,6 +8,10 @@ router.get('/home/:homeId', controller.getRoomsByHome);
 
 router.get('/layout/:homeId', controller.getRoomsWithZones);
 
+router.put('/:roomId/position', controller.updateRoomPosition);
+
+router.put('/:roomId/size', controller.updateRoomSize);
+
 router.delete('/:roomId', controller.deleteRoom);
 
 module.exports = router;

@@ -95,6 +95,8 @@ exports.getRoomsWithZones = async (req, res) => {
       rooms.name AS room_name,
       rooms.width AS room_width,
       rooms.height AS room_height,
+      rooms.pos_x AS room_pos_x,
+      rooms.pos_y AS room_pos_y,
 
       zones.id AS zone_id,
       zones.name AS zone_name,
@@ -119,6 +121,58 @@ exports.getRoomsWithZones = async (req, res) => {
       }
 
       res.json(rows);
+    }
+  );
+};
+
+// update room position while dragged on the house canvas
+exports.updateRoomPosition = async (req, res) => {
+  const { roomId } = req.params;
+  const { pos_x, pos_y } = req.body;
+
+  try {
+    if (!(await roomExists(roomId))) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
+  db.run(
+    `UPDATE rooms SET pos_x = ?, pos_y = ? WHERE id = ?`,
+    [pos_x, pos_y, roomId],
+    function (err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+
+      res.json({ success: true });
+    }
+  );
+};
+
+// update room size while resized on the house canvas
+exports.updateRoomSize = async (req, res) => {
+  const { roomId } = req.params;
+  const { width, height } = req.body;
+
+  try {
+    if (!(await roomExists(roomId))) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
+  db.run(
+    `UPDATE rooms SET width = ?, height = ? WHERE id = ?`,
+    [width, height, roomId],
+    function (err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+
+      res.json({ success: true });
     }
   );
 };

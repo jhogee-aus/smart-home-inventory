@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import API from '../services/api';
 import RoomCanvas from '../components/RoomCanvas';
+import HouseCanvas from '../components/HouseCanvas';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 interface Zone {
@@ -20,8 +21,14 @@ interface Room {
   name: string;
   width: number;
   height: number;
+  pos_x: number;
+  pos_y: number;
   zones: Zone[];
 }
+
+const ROOM_GAP = 60;
+const ROOM_X_START = 50;
+const ROOM_Y = 60;
 
 function RoomsPage() {
 
@@ -64,6 +71,24 @@ function RoomsPage() {
     { type: 'room' | 'zone'; id: number; name: string } | null
   >(null);
 
+  const [viewMode, setViewMode] = useState<'house' | 'room'>('house');
+
+  const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
+
+  const activeRoom = rooms.find(r => r.id === activeRoomId) || null;
+
+  const enterRoom = (roomId: number) => {
+    setActiveRoomId(roomId);
+    setViewMode('room');
+  };
+
+  const exitRoom = () => {
+    setViewMode('house');
+    setActiveRoomId(null);
+    setSelectedZone(null);
+    setItems([]);
+  };
+
   // FETCH ROOMS + ZONES
   const fetchRooms = async () => {
 
@@ -87,6 +112,8 @@ function RoomsPage() {
             name: row.room_name,
             width: row.room_width,
             height: row.room_height,
+            pos_x: row.room_pos_x || 0,
+            pos_y: row.room_pos_y || 0,
             zones: [],
           };
         }
@@ -155,12 +182,19 @@ function RoomsPage() {
 
     if (!newRoom.trim()) return;
 
+    // place the new room after the last one so it doesn't spawn overlapping an existing room
+    const pos_x =
+      ROOM_X_START + rooms.reduce((sum, r) => sum + r.width / 2 + ROOM_GAP, 0);
+    const pos_y = ROOM_Y;
+
     try {
 
       await API.post(`/rooms/${homeId}`, {
         name: newRoom,
         width: 500,
         height: 400,
+        pos_x,
+        pos_y,
       });
 
       setNewRoom('');
@@ -227,6 +261,10 @@ function RoomsPage() {
         setSelectedZone(null);
 
         setItems([]);
+      }
+
+      if (activeRoomId === roomId) {
+        exitRoom();
       }
 
     } catch (err) {
@@ -329,7 +367,9 @@ function RoomsPage() {
       z => z.id === result.zone_id
     );
 
-    if (zone) {
+    if (zone && room) {
+
+      enterRoom(room.id);
 
       setSelectedZone({
         id: zone.id,
@@ -575,25 +615,48 @@ function RoomsPage() {
 
       {/* CANVAS + ZONE DETAIL */}
       <section className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Visual Layout
-          </h2>
+        <div className="relative min-w-0 flex-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              {viewMode === 'room' && activeRoom ? activeRoom.name : 'Visual Layout'}
+            </h2>
+
+            {viewMode === 'room' && (
+              <button
+                onClick={exitRoom}
+                aria-label="Back to house view"
+                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                Back
+              </button>
+            )}
+          </div>
 
           {rooms.length === 0 && !loadingRooms ? (
             <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm text-slate-400">
               Add a room to see its layout here.
             </div>
-          ) : (
+          ) : viewMode === 'house' ? (
+            <div className="overflow-x-auto">
+              <HouseCanvas
+                rooms={rooms}
+                setRooms={setRooms}
+                onEnterRoom={enterRoom}
+              />
+            </div>
+          ) : activeRoom ? (
             <div className="overflow-x-auto">
               <RoomCanvas
-                rooms={rooms}
+                rooms={[activeRoom]}
                 setRooms={setRooms}
                 setSelectedZone={setSelectedZone}
                 highlightedZoneId={highlightedZoneId}
               />
             </div>
-          )}
+          ) : null}
         </div>
 
         <aside className="w-full shrink-0 lg:sticky lg:top-24 lg:w-96">
