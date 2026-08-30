@@ -2,6 +2,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 
 import HomePage from './pages/HomePage';
 import RoomsPage from './pages/RoomsPage';
+import MoverPage from './pages/MoverPage';
 import { TourProvider, useTour } from './context/TourContext';
 import UpdateChecker from './components/UpdateChecker';
 
@@ -25,6 +26,17 @@ function Header() {
         </Link>
 
         <div className="flex shrink-0 items-center gap-2">
+          <Link
+            to="/mover"
+            className="flex h-8 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="M3.3 7 12 12l8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+            Mover
+          </Link>
           <UpdateChecker />
           <button
             onClick={openTour}
@@ -50,6 +62,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/homes/:homeId" element={<RoomsPage />} />
+            <Route path="/mover" element={<MoverPage />} />
           </Routes>
         </main>
       </div>

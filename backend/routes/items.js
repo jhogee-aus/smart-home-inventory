@@ -10,6 +10,10 @@ router.get('/:zoneId', controller.getItemsByZone);
 
 router.put('/:itemId', controller.updateItem);
 
+router.put('/:itemId/pack', controller.packItem);
+
+router.put('/:itemId/unpack', controller.unpackItem);
+
 router.delete('/:itemId', controller.deleteItem);
 
 module.exports = router;

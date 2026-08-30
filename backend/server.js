@@ -9,6 +9,7 @@ function createServer() {
   const zonesRoutes = require('./routes/zones');
   const itemsRoutes = require('./routes/items');
   const searchRoutes = require('./routes/search');
+  const movesRoutes = require('./routes/moves');
 
   const app = express();
   app.use(cors());
@@ -19,6 +20,7 @@ function createServer() {
   app.use('/api/v1/zones', zonesRoutes);
   app.use('/api/v1/items', itemsRoutes);
   app.use('/api/v1/search', searchRoutes);
+  app.use('/api/v1/move-boxes', movesRoutes);
 
   app.get('/', (req, res) => {
     res.send('API is running');

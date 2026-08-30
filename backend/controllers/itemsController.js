@@ -111,6 +111,66 @@ exports.deleteItem = async (req, res) => {
   );
 };
 
+// pack an item from its zone into a moving box
+exports.packItem = async (req, res) => {
+  const { itemId } = req.params;
+  const { box_id } = req.body;
+
+  if (!box_id) {
+    return res.status(400).json({ error: 'box_id is required' });
+  }
+
+  try {
+    if (!(await itemExists(itemId))) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
+  db.run(
+    `UPDATE items SET box_id = ?, zone_id = NULL WHERE id = ?`,
+    [box_id, itemId],
+    function (err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+
+      res.json({ success: true });
+    }
+  );
+};
+
+// unpack an item from a moving box into a destination zone
+exports.unpackItem = async (req, res) => {
+  const { itemId } = req.params;
+  const { zone_id } = req.body;
+
+  if (!zone_id) {
+    return res.status(400).json({ error: 'zone_id is required' });
+  }
+
+  try {
+    if (!(await itemExists(itemId))) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
+  db.run(
+    `UPDATE items SET zone_id = ?, box_id = NULL WHERE id = ?`,
+    [zone_id, itemId],
+    function (err) {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
+
+      res.json({ success: true });
+    }
+  );
+};
+
 exports.updateItem = async (req, res) => {
 
   const { itemId } = req.params;
