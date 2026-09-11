@@ -16,6 +16,19 @@ db.serialize(() => {
     )
   `);
 
+  // drop the leftover "user_id" column from the old multi-user schema - it's
+  // always NULL and nothing reads or writes it, so a plain DROP COLUMN is safe
+  // (no data to preserve or migrate).
+  db.all(`PRAGMA table_info(homes)`, (err, columns) => {
+    if (err) return console.error(err.message);
+
+    const hasUserId = columns.some((c) => c.name === 'user_id');
+
+    if (hasUserId) {
+      db.run(`ALTER TABLE homes DROP COLUMN user_id`);
+    }
+  });
+
   db.run(`
     CREATE TABLE IF NOT EXISTS rooms (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

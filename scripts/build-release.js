@@ -15,20 +15,16 @@ const JavaScriptObfuscator = require('javascript-obfuscator');
 const root = path.join(__dirname, '..');
 
 const targets = [
-  'backend/server.js',
   'backend/db/db.js',
   'backend/controllers/homesController.js',
   'backend/controllers/roomsController.js',
   'backend/controllers/zonesController.js',
   'backend/controllers/itemsController.js',
+  'backend/controllers/movesController.js',
   'backend/controllers/searchController.js',
-  'backend/routes/homes.js',
-  'backend/routes/rooms.js',
-  'backend/routes/zones.js',
-  'backend/routes/items.js',
-  'backend/routes/search.js',
   'electron/main.js',
   'electron/preload.js',
+  'electron/ipc.js',
 ].map((p) => path.join(root, p));
 
 const options = {

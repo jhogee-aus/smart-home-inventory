@@ -5,11 +5,11 @@ const db = require('../db/db');
 const escapeLike = (str) =>
   str.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
 
-exports.searchItems = (req, res) => {
-  const query = (req.query.q || '').trim();
+exports.searchItems = (query) => {
+  query = (query || '').trim();
 
   if (!query) {
-    return res.status(400).json({ error: 'Search query is required' });
+    return Promise.reject(new Error('Search query is required'));
   }
 
   const words = query.split(/\s+/).filter(Boolean);
@@ -32,47 +32,44 @@ exports.searchItems = (req, res) => {
     return [pattern, pattern, pattern, pattern];
   });
 
-  db.all(
-    `
-    SELECT
-      items.id AS item_id,
-      items.name AS item_name,
-      items.description,
-      items.quantity,
+  return new Promise((resolve, reject) => {
+    db.all(
+      `
+      SELECT
+        items.id AS item_id,
+        items.name AS item_name,
+        items.description,
+        items.quantity,
 
-      zones.id AS zone_id,
-      zones.name AS zone_name,
-      zones.pos_x,
-      zones.pos_y,
+        zones.id AS zone_id,
+        zones.name AS zone_name,
+        zones.pos_x,
+        zones.pos_y,
 
-      rooms.id AS room_id,
-      rooms.name AS room_name
+        rooms.id AS room_id,
+        rooms.name AS room_name
 
-    FROM items
-    JOIN zones ON items.zone_id = zones.id
-    JOIN rooms ON zones.room_id = rooms.id
+      FROM items
+      JOIN zones ON items.zone_id = zones.id
+      JOIN rooms ON zones.room_id = rooms.id
 
-    WHERE ${wordConditions}
+      WHERE ${wordConditions}
 
-    ORDER BY
-      CASE
-        WHEN items.name LIKE ? ESCAPE '\\' THEN 0
-        WHEN items.description LIKE ? ESCAPE '\\' THEN 1
-        ELSE 2
-      END,
-      items.name COLLATE NOCASE
+      ORDER BY
+        CASE
+          WHEN items.name LIKE ? ESCAPE '\\' THEN 0
+          WHEN items.description LIKE ? ESCAPE '\\' THEN 1
+          ELSE 2
+        END,
+        items.name COLLATE NOCASE
 
-    LIMIT 50
-    `,
-    [...wordParams, fullTerm, fullTerm],
-    (err, rows) => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
+      LIMIT 50
+      `,
+      [...wordParams, fullTerm, fullTerm],
+      (err, rows) => {
+        if (err) return reject(err);
+        resolve({ results: rows });
       }
-
-      res.json({
-        results: rows
-      });
-    }
-  );
+    );
+  });
 };

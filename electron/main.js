@@ -1,8 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
-
-const PORT = process.env.PORT || 3000;
+const { registerIpcHandlers } = require('./ipc');
 
 let mainWindow;
 
@@ -29,13 +28,12 @@ function startBackend() {
 
   process.env.DB_PATH = dbPath;
 
-  const createServer = require(path.join(backendDir(), 'server.js'));
-  const server = createServer();
+  // requiring db.js opens the sqlite connection and runs its migrations as a
+  // side effect; IPC handlers below call straight into the controllers, no
+  // HTTP server or open port involved.
+  require(path.join(backendDir(), 'db', 'db.js'));
 
-  return new Promise((resolve, reject) => {
-    server.on('error', reject);
-    server.listen(PORT, '127.0.0.1', () => resolve());
-  });
+  registerIpcHandlers(backendDir());
 }
 
 function createWindow() {
@@ -100,13 +98,13 @@ function setupAutoUpdater() {
 }
 
 if (gotSingleInstanceLock) {
-  app.whenReady().then(async () => {
+  app.whenReady().then(() => {
     try {
-      await startBackend();
+      startBackend();
     } catch (err) {
       dialog.showErrorBox(
         'Smart Home Inventory failed to start',
-        `The local server could not start (it may already be running): ${err.message}`
+        `The local database could not be opened: ${err.message}`
       );
       app.quit();
       return;

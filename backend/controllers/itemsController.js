@@ -17,203 +17,123 @@ const itemExists = (itemId) =>
   });
 
 // CREATE item
-exports.createItem = async (req, res) => {
-  const { zoneId } = req.params;
-  const { name, description, quantity } = req.body;
-
+exports.createItem = async (zoneId, { name, description, quantity } = {}) => {
   if (!name) {
-    return res.status(400).json({ error: 'Item name is required' });
+    throw new Error('Item name is required');
   }
 
-  try {
-    if (!(await zoneExists(zoneId))) {
-      return res.status(404).json({ error: 'Zone not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+  if (!(await zoneExists(zoneId))) {
+    throw new Error('Zone not found');
   }
 
-  db.run(
-    `INSERT INTO items (zone_id, name, description, quantity)
-     VALUES (?, ?, ?, ?)`,
-    [zoneId, name, description || '', quantity || 1],
-    function (err) {
-      if (err) {
-        return res.status(400).json({ error: err.message });
+  return new Promise((resolve, reject) => {
+    db.run(
+      `INSERT INTO items (zone_id, name, description, quantity)
+       VALUES (?, ?, ?, ?)`,
+      [zoneId, name, description || '', quantity || 1],
+      function (err) {
+        if (err) return reject(err);
+
+        resolve({
+          id: this.lastID,
+          zone_id: zoneId,
+          name,
+        });
       }
-
-      res.status(201).json({
-        id: this.lastID,
-        zone_id: zoneId,
-        name
-      });
-    }
-  );
+    );
+  });
 };
 
 // GET items by zone
-exports.getItemsByZone = async (req, res) => {
-  const { zoneId } = req.params;
-
-  try {
-    if (!(await zoneExists(zoneId))) {
-      return res.status(404).json({ error: 'Zone not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+exports.getItemsByZone = async (zoneId) => {
+  if (!(await zoneExists(zoneId))) {
+    throw new Error('Zone not found');
   }
 
-  db.all(
-    `SELECT * FROM items WHERE zone_id = ?`,
-    [zoneId],
-    (err, rows) => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-
-      res.json(rows);
-    }
-  );
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM items WHERE zone_id = ?`, [zoneId], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
 };
 
-exports.deleteItem = async (req, res) => {
-
-  const { itemId } = req.params;
-
-  try {
-    if (!(await itemExists(itemId))) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+exports.deleteItem = async (itemId) => {
+  if (!(await itemExists(itemId))) {
+    throw new Error('Item not found');
   }
 
-  db.run(
-    `
-    DELETE FROM items
-    WHERE id = ?
-    `,
-    [itemId],
-    function(err) {
-
-      if (err) {
-
-        return res.status(400).json({
-          error: err.message
-        });
-
-      }
-
-      res.json({
-        success: true
-      });
-    }
-  );
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM items WHERE id = ?`, [itemId], function (err) {
+      if (err) return reject(err);
+      resolve({ success: true });
+    });
+  });
 };
 
 // pack an item from its zone into a moving box
-exports.packItem = async (req, res) => {
-  const { itemId } = req.params;
-  const { box_id } = req.body;
-
+exports.packItem = async (itemId, { box_id } = {}) => {
   if (!box_id) {
-    return res.status(400).json({ error: 'box_id is required' });
+    throw new Error('box_id is required');
   }
 
-  try {
-    if (!(await itemExists(itemId))) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+  if (!(await itemExists(itemId))) {
+    throw new Error('Item not found');
   }
 
-  db.run(
-    `UPDATE items SET box_id = ?, zone_id = NULL WHERE id = ?`,
-    [box_id, itemId],
-    function (err) {
-      if (err) {
-        return res.status(400).json({ error: err.message });
+  return new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE items SET box_id = ?, zone_id = NULL WHERE id = ?`,
+      [box_id, itemId],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
       }
-
-      res.json({ success: true });
-    }
-  );
+    );
+  });
 };
 
 // unpack an item from a moving box into a destination zone
-exports.unpackItem = async (req, res) => {
-  const { itemId } = req.params;
-  const { zone_id } = req.body;
-
+exports.unpackItem = async (itemId, { zone_id } = {}) => {
   if (!zone_id) {
-    return res.status(400).json({ error: 'zone_id is required' });
+    throw new Error('zone_id is required');
   }
 
-  try {
-    if (!(await itemExists(itemId))) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+  if (!(await itemExists(itemId))) {
+    throw new Error('Item not found');
   }
 
-  db.run(
-    `UPDATE items SET zone_id = ?, box_id = NULL WHERE id = ?`,
-    [zone_id, itemId],
-    function (err) {
-      if (err) {
-        return res.status(400).json({ error: err.message });
+  return new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE items SET zone_id = ?, box_id = NULL WHERE id = ?`,
+      [zone_id, itemId],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
       }
-
-      res.json({ success: true });
-    }
-  );
+    );
+  });
 };
 
-exports.updateItem = async (req, res) => {
-
-  const { itemId } = req.params;
-
-  const {
-    name,
-    quantity
-  } = req.body;
-
-  try {
-    if (!(await itemExists(itemId))) {
-      return res.status(404).json({ error: 'Item not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+exports.updateItem = async (itemId, { name, quantity } = {}) => {
+  if (!(await itemExists(itemId))) {
+    throw new Error('Item not found');
   }
 
-  db.run(
-    `
-    UPDATE items
-    SET
-      name = ?,
-      quantity = ?
-    WHERE id = ?
-    `,
-    [
-      name,
-      quantity,
-      itemId
-    ],
-    function(err) {
-
-      if (err) {
-
-        return res.status(400).json({
-          error: err.message
-        });
-
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      UPDATE items
+      SET
+        name = ?,
+        quantity = ?
+      WHERE id = ?
+      `,
+      [name, quantity, itemId],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
       }
-
-      res.json({
-        success: true
-      });
-    }
-  );
+    );
+  });
 };

@@ -17,205 +17,113 @@ const zoneExists = (zoneId) =>
   });
 
 // CREATE zone
-exports.createZone = async (req, res) => {
-  const { roomId } = req.params;
-  const { name, type, width, height, pos_x, pos_y, attributes } = req.body;
-
+exports.createZone = async (roomId, { name, type, width, height, pos_x, pos_y, attributes } = {}) => {
   if (!name) {
-    return res.status(400).json({ error: 'Zone name is required' });
+    throw new Error('Zone name is required');
   }
 
-  try {
-    if (!(await roomExists(roomId))) {
-      return res.status(404).json({ error: 'Room not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+  if (!(await roomExists(roomId))) {
+    throw new Error('Room not found');
   }
 
-  db.run(
-    `INSERT INTO zones (room_id, name, type, width, height, pos_x, pos_y, attributes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      roomId,
-      name,
-      type || 'box',
-      width || 0,
-      height || 0,
-      pos_x || 0,
-      pos_y || 0,
-      JSON.stringify(attributes || {}),
-    ],
-    function (err) {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-
-      res.status(201).json({
-        id: this.lastID,
-        room_id: roomId,
+  return new Promise((resolve, reject) => {
+    db.run(
+      `INSERT INTO zones (room_id, name, type, width, height, pos_x, pos_y, attributes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        roomId,
         name,
-        type
-      });
-    }
-  );
+        type || 'box',
+        width || 0,
+        height || 0,
+        pos_x || 0,
+        pos_y || 0,
+        JSON.stringify(attributes || {}),
+      ],
+      function (err) {
+        if (err) return reject(err);
+
+        resolve({
+          id: this.lastID,
+          room_id: roomId,
+          name,
+          type,
+        });
+      }
+    );
+  });
 };
 
 // GET zones by room
-exports.getZonesByRoom = async (req, res) => {
-  const { roomId } = req.params;
-
-  try {
-    if (!(await roomExists(roomId))) {
-      return res.status(404).json({ error: 'Room not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+exports.getZonesByRoom = async (roomId) => {
+  if (!(await roomExists(roomId))) {
+    throw new Error('Room not found');
   }
 
-  db.all(
-    `SELECT * FROM zones WHERE room_id = ?`,
-    [roomId],
-    (err, rows) => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-
-      res.json(rows);
-    }
-  );
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT * FROM zones WHERE room_id = ?`, [roomId], (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
 };
 
-//update position while dragged
-exports.updateZonePosition = async (req, res) => {
-  const { zoneId } = req.params;
-
-  const { pos_x, pos_y } = req.body;
-
-  try {
-    if (!(await zoneExists(zoneId))) {
-      return res.status(404).json({ error: 'Zone not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+// update position while dragged
+exports.updateZonePosition = async (zoneId, { pos_x, pos_y } = {}) => {
+  if (!(await zoneExists(zoneId))) {
+    throw new Error('Zone not found');
   }
 
-  db.run(
-    `
-    UPDATE zones
-    SET pos_x = ?, pos_y = ?
-    WHERE id = ?
-    `,
-    [pos_x, pos_y, zoneId],
-    function (err) {
-      if (err) {
-        return res.status(400).json({
-          error: err.message,
-        });
+  return new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE zones SET pos_x = ?, pos_y = ? WHERE id = ?`,
+      [pos_x, pos_y, zoneId],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
       }
+    );
+  });
+};
 
-      res.json({
-        success: true,
+// item will be deleted before zone deleted
+exports.deleteZone = async (zoneId) => {
+  if (!(await zoneExists(zoneId))) {
+    throw new Error('Zone not found');
+  }
+
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM items WHERE zone_id = ?`, [zoneId], (err) => {
+      if (err) return reject(err);
+
+      db.run(`DELETE FROM zones WHERE id = ?`, [zoneId], function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
       });
-    }
-  );
+    });
+  });
 };
 
-//item will be deleted before zone deleted
-exports.deleteZone = async (req, res) => {
-
-  const { zoneId } = req.params;
-
-  try {
-    if (!(await zoneExists(zoneId))) {
-      return res.status(404).json({ error: 'Zone not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
+exports.updateZone = async (zoneId, { name, type, attributes } = {}) => {
+  if (!(await zoneExists(zoneId))) {
+    throw new Error('Zone not found');
   }
 
-  db.run(
-    `DELETE FROM items WHERE zone_id = ?`,
-    [zoneId],
-    (err) => {
-
-      if (err) {
-
-        return res.status(400).json({
-          error: err.message
-        });
+  return new Promise((resolve, reject) => {
+    db.run(
+      `
+      UPDATE zones
+      SET
+        name = ?,
+        type = ?,
+        attributes = ?
+      WHERE id = ?
+      `,
+      [name, type, JSON.stringify(attributes || {}), zoneId],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
       }
-
-      db.run(
-        `
-        DELETE FROM zones
-        WHERE id = ?
-        `,
-        [zoneId],
-        function(err) {
-
-          if (err) {
-
-            return res.status(400).json({
-              error: err.message
-            });
-          }
-
-          res.json({
-            success: true
-          });
-        }
-      );
-    }
-  );
-};
-
-exports.updateZone = async (req, res) => {
-
-  const { zoneId } = req.params;
-
-  const {
-    name,
-    type,
-    attributes
-  } = req.body;
-
-  try {
-    if (!(await zoneExists(zoneId))) {
-      return res.status(404).json({ error: 'Zone not found' });
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-
-  db.run(
-    `
-    UPDATE zones
-    SET
-      name = ?,
-      type = ?,
-      attributes = ?
-    WHERE id = ?
-    `,
-    [
-      name,
-      type,
-      JSON.stringify(attributes || {}),
-      zoneId
-    ],
-    function(err) {
-
-      if (err) {
-
-        return res.status(400).json({
-          error: err.message
-        });
-
-      }
-
-      res.json({
-        success: true
-      });
-    }
-  );
+    );
+  });
 };

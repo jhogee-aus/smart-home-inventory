@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import API from '../services/api';
+import API, { getErrorMessage } from '../services/api';
 import ZonePicker from '../components/ZonePicker';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -76,8 +76,8 @@ function MoverPage() {
   const [deleteBoxError, setDeleteBoxError] = useState<string | null>(null);
 
   const fetchBoxes = () => {
-    API.get('/move-boxes')
-      .then((res) => setBoxes(res.data))
+    API.moveBoxes.list()
+      .then((data) => setBoxes(data))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
   };
@@ -91,7 +91,7 @@ function MoverPage() {
 
     setCreating(true);
     try {
-      await API.post('/move-boxes', { name: newBoxName });
+      await API.moveBoxes.create({ name: newBoxName });
       setNewBoxName('');
       fetchBoxes();
     } catch (err) {
@@ -103,7 +103,7 @@ function MoverPage() {
 
   const completeBox = async (boxId: number) => {
     try {
-      await API.put(`/move-boxes/${boxId}/complete`);
+      await API.moveBoxes.complete(boxId);
       fetchBoxes();
     } catch (err) {
       console.error(err);
@@ -112,14 +112,12 @@ function MoverPage() {
 
   const deleteBox = async (box: Box) => {
     try {
-      await API.delete(`/move-boxes/${box.id}`);
+      await API.moveBoxes.delete(box.id);
       setConfirmDeleteBox(null);
       setDeleteBoxError(null);
       fetchBoxes();
-    } catch (err: any) {
-      setDeleteBoxError(
-        err?.response?.data?.error || 'Could not delete this box.'
-      );
+    } catch (err) {
+      setDeleteBoxError(getErrorMessage(err, 'Could not delete this box.'));
     }
   };
 
@@ -147,8 +145,8 @@ function MoverPage() {
     }
 
     try {
-      const res = await API.get(`/items/${zoneId}`);
-      setPackZoneItems(res.data);
+      const data = await API.items.getByZone(zoneId);
+      setPackZoneItems(data);
     } catch (err) {
       console.error(err);
     }
@@ -170,13 +168,13 @@ function MoverPage() {
     try {
       await Promise.all(
         Array.from(checkedItemIds).map((itemId) =>
-          API.put(`/items/${itemId}/pack`, { box_id: packBoxId })
+          API.items.pack(itemId, { box_id: packBoxId })
         )
       );
 
       if (packZoneId) {
-        const res = await API.get(`/items/${packZoneId}`);
-        setPackZoneItems(res.data);
+        const data = await API.items.getByZone(packZoneId);
+        setPackZoneItems(data);
       }
 
       setCheckedItemIds(new Set());
@@ -190,7 +188,7 @@ function MoverPage() {
 
   const unpackItem = async (itemId: number, zoneId: number) => {
     try {
-      await API.put(`/items/${itemId}/unpack`, { zone_id: zoneId });
+      await API.items.unpack(itemId, { zone_id: zoneId });
       fetchBoxes();
     } catch (err) {
       console.error(err);

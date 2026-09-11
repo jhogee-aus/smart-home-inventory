@@ -231,13 +231,10 @@ function RoomCanvas({ rooms, setRooms, setSelectedZone, highlightedZoneId }: Pro
                     // SAVE TO DATABASE
                     try {
 
-                      await API.put(
-                        `/zones/${zone.id}/position`,
-                        {
-                          pos_x: newX,
-                          pos_y: newY,
-                        }
-                      );
+                      await API.zones.updatePosition(zone.id, {
+                        pos_x: newX,
+                        pos_y: newY,
+                      });
 
                     } catch (err) {
 

@@ -124,7 +124,7 @@ function HouseCanvas({ rooms, setRooms, onEnterRoom }: Props) {
                 );
 
                 try {
-                  await API.put(`/rooms/${room.id}/position`, { pos_x: newX, pos_y: newY });
+                  await API.rooms.updatePosition(room.id, { pos_x: newX, pos_y: newY });
                 } catch (err) {
                   console.error(err);
                 }
@@ -257,7 +257,7 @@ function HouseCanvas({ rooms, setRooms, onEnterRoom }: Props) {
                   const finalPixelH = e.target.y() + HANDLE_SIZE;
 
                   try {
-                    await API.put(`/rooms/${room.id}/size`, {
+                    await API.rooms.updateSize(room.id, {
                       width: finalPixelW * 2,
                       height: finalPixelH * 2,
                     });

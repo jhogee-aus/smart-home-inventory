@@ -20,8 +20,8 @@ function HomePage() {
   const navigate = useNavigate();
 
   const fetchHomes = () => {
-    API.get('/homes')
-      .then(res => setHomes(res.data))
+    API.homes.list()
+      .then(data => setHomes(data))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
   };
@@ -35,9 +35,7 @@ function HomePage() {
 
     setCreating(true);
     try {
-      await API.post('/homes', {
-        name: newHome,
-      });
+      await API.homes.create(newHome);
 
       setNewHome('');
       setIsAdding(false);
@@ -66,7 +64,7 @@ function HomePage() {
 
     setDeletingId(home.id);
     try {
-      await API.delete(`/homes/${home.id}`);
+      await API.homes.delete(home.id);
       setHomes(prev => prev.filter(h => h.id !== home.id));
     } catch (err) {
       console.error(err);

@@ -33,8 +33,8 @@ function ZonePicker({ onSelect }: Props) {
   const [zoneId, setZoneId] = useState<number | ''>('');
 
   useEffect(() => {
-    API.get('/homes')
-      .then((res) => setHomes(res.data))
+    API.homes.list()
+      .then((data) => setHomes(data))
       .catch((err) => console.error(err));
   }, []);
 
@@ -44,11 +44,11 @@ function ZonePicker({ onSelect }: Props) {
       return;
     }
 
-    API.get(`/rooms/layout/${homeId}`)
-      .then((res) => {
+    API.rooms.getLayout(homeId)
+      .then((data) => {
         const roomMap: Record<number, RoomOption> = {};
 
-        res.data.forEach((row: any) => {
+        data.forEach((row: any) => {
           if (!roomMap[row.room_id]) {
             roomMap[row.room_id] = { id: row.room_id, name: row.room_name, zones: [] };
           }

@@ -100,11 +100,7 @@ function RoomsPage() {
 
     try {
 
-      const res = await API.get(
-        `/rooms/layout/${homeId}`
-      );
-
-      const rows = res.data;
+      const rows = await API.rooms.getLayout(homeId as string);
 
       const roomMap: any = {};
 
@@ -165,11 +161,9 @@ function RoomsPage() {
 
     try {
 
-      const res = await API.get(
-        `/items/${selectedZone.id}`
-      );
+      const data = await API.items.getByZone(selectedZone.id);
 
-      setItems(res.data);
+      setItems(data);
 
     } catch (err) {
 
@@ -203,7 +197,7 @@ function RoomsPage() {
 
     try {
 
-      await API.post(`/rooms/${homeId}`, {
+      await API.rooms.create(homeId as string, {
         name: newRoom,
         width: 500,
         height: 400,
@@ -231,7 +225,7 @@ function RoomsPage() {
 
     try {
 
-      await API.post(`/zones/${roomId}`, {
+      await API.zones.create(roomId, {
         name: zoneName,
         type: 'box',
         width: 120,
@@ -260,9 +254,7 @@ function RoomsPage() {
 
     try {
 
-      await API.delete(
-        `/rooms/${roomId}`
-      );
+      await API.rooms.delete(roomId);
 
       const deletedRoom = rooms.find(r => r.id === roomId);
 
@@ -293,9 +285,7 @@ function RoomsPage() {
 
     try {
 
-      await API.delete(
-        `/zones/${zoneId}`
-      );
+      await API.zones.delete(zoneId);
 
       fetchRooms();
 
@@ -323,14 +313,11 @@ function RoomsPage() {
 
     try {
 
-      await API.put(
-        `/zones/${selectedZone.id}`,
-        {
-          name: editZoneName,
-          type: editZoneType,
-          attributes,
-        }
-      );
+      await API.zones.update(selectedZone.id, {
+        name: editZoneName,
+        type: editZoneType,
+        attributes,
+      });
 
       // update sidebar immediately
       setSelectedZone({
@@ -360,11 +347,9 @@ function RoomsPage() {
 
     try {
 
-      const res = await API.get(
-        `/search?q=${encodeURIComponent(searchTerm)}`
-      );
+      const data = await API.search.items(searchTerm);
 
-      setSearchResults(res.data.results);
+      setSearchResults(data.results);
       setSearched(true);
 
     } catch (err) {
@@ -422,14 +407,11 @@ function RoomsPage() {
 
     try {
 
-      await API.post(
-        `/items/${selectedZone.id}`,
-        {
-          name: newItem,
-          description: '',
-          quantity: 1,
-        }
-      );
+      await API.items.create(selectedZone.id, {
+        name: newItem,
+        description: '',
+        quantity: 1,
+      });
 
       setNewItem('');
 
@@ -447,13 +429,10 @@ function RoomsPage() {
 
     try {
 
-      await API.put(
-        `/items/${itemId}`,
-        {
-          name: editItemName,
-          quantity: 1,
-        }
-      );
+      await API.items.update(itemId, {
+        name: editItemName,
+        quantity: 1,
+      });
 
       setEditingItemId(null);
 
@@ -471,9 +450,7 @@ function RoomsPage() {
 
     try {
 
-      await API.delete(
-        `/items/${itemId}`
-      );
+      await API.items.delete(itemId);
 
       fetchItems();
 
