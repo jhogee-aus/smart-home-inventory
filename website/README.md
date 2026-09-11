@@ -19,6 +19,5 @@ Deployed via Vercel, connected to the `jhogee-aus/smart-home-inventory` GitHub r
 The download button and in-app update check both point at GitHub Releases, so no file
 copying into this folder is needed — see `downloads/README.md` and `updates/win/README.md`.
 
-## Placeholders still to fill in
-
-- `index.html` → donate buttons (`REPLACE-WITH-YOUR-USERNAME` / `REPLACE-WITH-YOUR-ID`)
+Donations go through Ko-fi only (`index.html`'s donate section) — Ko-fi already has PayPal
+wired up as a payment method on its own end, so there's no separate PayPal button.
