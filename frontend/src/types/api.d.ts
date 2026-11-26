@@ -34,6 +34,7 @@ export interface Api {
       body: { name: string; type: string; attributes?: Record<string, unknown> }
     ) => Promise<{ success: true }>;
     updatePosition: (zoneId: number, body: { pos_x: number; pos_y: number }) => Promise<{ success: true }>;
+    updateSize: (zoneId: number, body: { width: number; height: number }) => Promise<{ success: true }>;
     delete: (zoneId: number) => Promise<{ success: true }>;
   };
   items: {

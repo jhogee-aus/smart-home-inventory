@@ -86,6 +86,24 @@ exports.updateZonePosition = async (zoneId, { pos_x, pos_y } = {}) => {
   });
 };
 
+// update size while resized
+exports.updateZoneSize = async (zoneId, { width, height } = {}) => {
+  if (!(await zoneExists(zoneId))) {
+    throw new Error('Zone not found');
+  }
+
+  return new Promise((resolve, reject) => {
+    db.run(
+      `UPDATE zones SET width = ?, height = ? WHERE id = ?`,
+      [width, height, zoneId],
+      function (err) {
+        if (err) return reject(err);
+        resolve({ success: true });
+      }
+    );
+  });
+};
+
 // item will be deleted before zone deleted
 exports.deleteZone = async (zoneId) => {
   if (!(await zoneExists(zoneId))) {
