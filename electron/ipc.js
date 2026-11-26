@@ -27,6 +27,7 @@ function registerIpcHandlers(backendDir) {
   ipcMain.handle('zones:getByRoom', (event, roomId) => zones.getZonesByRoom(roomId));
   ipcMain.handle('zones:update', (event, zoneId, body) => zones.updateZone(zoneId, body));
   ipcMain.handle('zones:updatePosition', (event, zoneId, body) => zones.updateZonePosition(zoneId, body));
+  ipcMain.handle('zones:updateSize', (event, zoneId, body) => zones.updateZoneSize(zoneId, body));
   ipcMain.handle('zones:delete', (event, zoneId) => zones.deleteZone(zoneId));
 
   ipcMain.handle('items:create', (event, zoneId, body) => items.createItem(zoneId, body));

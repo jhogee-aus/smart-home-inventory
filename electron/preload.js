@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('api', {
     getByRoom: invoke('zones:getByRoom'),
     update: invoke('zones:update'),
     updatePosition: invoke('zones:updatePosition'),
+    updateSize: invoke('zones:updateSize'),
     delete: invoke('zones:delete'),
   },
   items: {

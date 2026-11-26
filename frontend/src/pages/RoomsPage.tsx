@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import API from '../services/api';
-import RoomCanvas from '../components/RoomCanvas';
+import RoomCanvas, { type RoomCanvasHandle } from '../components/RoomCanvas';
 import HouseCanvas, { isOverlapping, type HouseCanvasHandle } from '../components/HouseCanvas';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { FURNITURE_TYPES, furnitureDef, furnitureLabel } from '../lib/furniture';
+import { overlapsAny } from '../lib/collision';
 
 interface Zone {
   id: number;
@@ -36,6 +37,7 @@ function RoomsPage() {
   const { homeId } = useParams();
 
   const houseCanvasRef = useRef<HouseCanvasHandle>(null);
+  const roomCanvasRef = useRef<RoomCanvasHandle>(null);
 
   const [rooms, setRooms] = useState<Room[]>([]);
 
@@ -79,6 +81,9 @@ function RoomsPage() {
   >(null);
 
   const [viewMode, setViewMode] = useState<'house' | 'room'>('house');
+
+  const [allRoomsVisible, setAllRoomsVisible] = useState(true);
+  const [allZonesVisible, setAllZonesVisible] = useState(true);
 
   const [activeRoomId, setActiveRoomId] = useState<number | null>(null);
 
@@ -243,15 +248,43 @@ function RoomsPage() {
 
     if (!zoneName?.trim()) return;
 
+    const DEFAULT_ZONE_WIDTH = 120;
+    const DEFAULT_ZONE_HEIGHT = 60;
+
+    const room = rooms.find(r => r.id === roomId);
+
+    let pos_x = 40;
+    let pos_y = 80;
+
+    // nudge diagonally until clear of any existing zone, rather than
+    // stacking new zones exactly on top of each other every time - same
+    // pattern as createRoom's overlap-avoidance below.
+    if (room) {
+      const NUDGE = 20;
+      const MAX_ATTEMPTS = 25;
+      for (
+        let attempt = 0;
+        attempt < MAX_ATTEMPTS &&
+        overlapsAny(
+          { x: pos_x, y: pos_y, w: DEFAULT_ZONE_WIDTH, h: DEFAULT_ZONE_HEIGHT },
+          room.zones.map(z => ({ x: z.pos_x, y: z.pos_y, w: z.width, h: z.height }))
+        );
+        attempt++
+      ) {
+        pos_x += NUDGE;
+        pos_y += NUDGE;
+      }
+    }
+
     try {
 
       await API.zones.create(roomId, {
         name: zoneName,
         type: 'box',
-        width: 120,
-        height: 60,
-        pos_x: 40,
-        pos_y: 80,
+        width: DEFAULT_ZONE_WIDTH,
+        height: DEFAULT_ZONE_HEIGHT,
+        pos_x,
+        pos_y,
       });
 
       // clear input
@@ -580,7 +613,7 @@ function RoomsPage() {
                   </button>
                 </div>
                 <p className="mt-0.5 text-xs text-slate-500">
-                  {room.width} × {room.height} · {room.zones.length} zone{room.zones.length === 1 ? '' : 's'}
+                  {Math.round(room.width)} × {Math.round(room.height)} · {room.zones.length} zone{room.zones.length === 1 ? '' : 's'}
                 </p>
 
                 <div className="mt-3 flex gap-1.5">
@@ -640,21 +673,46 @@ function RoomsPage() {
             </h2>
 
             {viewMode === 'room' ? (
-              <button
-                onClick={exitRoom}
-                aria-label="Back to house view"
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-                Back
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => roomCanvasRef.current?.fitToScreen()}
+                  aria-label="Fit all zones to screen"
+                  title={allZonesVisible ? undefined : 'Some zones are outside the current view'}
+                  className={
+                    allZonesVisible
+                      ? 'inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50'
+                      : 'inline-flex items-center gap-1 rounded-lg border border-green-300 bg-green-100 px-2.5 py-1.5 text-xs font-medium text-green-800 shadow-sm hover:bg-green-200'
+                  }
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                    <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                    <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                    <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                  </svg>
+                  Fit to screen
+                </button>
+                <button
+                  onClick={exitRoom}
+                  aria-label="Back to house view"
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  Back
+                </button>
+              </div>
             ) : rooms.length > 0 ? (
               <button
                 onClick={() => houseCanvasRef.current?.fitToScreen()}
                 aria-label="Fit all rooms to screen"
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50"
+                title={allRoomsVisible ? undefined : 'Some rooms are outside the current view'}
+                className={
+                  allRoomsVisible
+                    ? 'inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm hover:bg-slate-50'
+                    : 'inline-flex items-center gap-1 rounded-lg border border-green-300 bg-green-100 px-2.5 py-1.5 text-xs font-medium text-green-800 shadow-sm hover:bg-green-200'
+                }
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3" />
@@ -667,7 +725,7 @@ function RoomsPage() {
             ) : null}
           </div>
 
-          {viewMode === 'house' && rooms.length > 0 && (
+          {rooms.length > 0 && (viewMode === 'house' || activeRoom) && (
             <p className="mb-2 text-xs text-slate-400">
               Scroll to zoom · drag empty space (or hold Space) to pan
             </p>
@@ -683,16 +741,17 @@ function RoomsPage() {
               rooms={rooms}
               setRooms={setRooms}
               onEnterRoom={enterRoom}
+              onVisibilityChange={setAllRoomsVisible}
             />
           ) : activeRoom ? (
-            <div className="overflow-x-auto">
-              <RoomCanvas
-                rooms={[activeRoom]}
-                setRooms={setRooms}
-                setSelectedZone={setSelectedZone}
-                highlightedZoneId={highlightedZoneId}
-              />
-            </div>
+            <RoomCanvas
+              ref={roomCanvasRef}
+              room={activeRoom}
+              setRooms={setRooms}
+              setSelectedZone={setSelectedZone}
+              highlightedZoneId={highlightedZoneId}
+              onVisibilityChange={setAllZonesVisible}
+            />
           ) : null}
         </div>
 
