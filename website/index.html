@@ -122,12 +122,22 @@
 
         <ul class="changelog">
           <li class="changelog__entry">
+            <div class="changelog__version">v2.1.0 <span class="changelog__date">Visual Layout improvements</span></div>
+            <ul>
+              <li>Pan and zoom now work the same way in the house view and inside a room: scroll to zoom, hold Space to pan, and "Fit to screen" to frame everything</li>
+              <li>Dragging and resizing rooms and zones is smoother and more predictable — no more jumping past a neighbor you're dragging over</li>
+              <li>Long zone names now truncate neatly instead of overlapping a neighboring zone; hover or click a zone to see its full name</li>
+              <li>Furniture icons inside a zone now resize live along with it</li>
+              <li>Fixed a long-standing issue where two zones added back-to-back could end up stacked on top of each other</li>
+            </ul>
+          </li>
+          <li class="changelog__entry">
             <div class="changelog__version">v2.0.0 <span class="changelog__date">Feature update</span></div>
             <ul>
               <li>New floor-plan view: drag rooms into place, resize them, and click into any room to arrange its zones</li>
               <li>Zones now look like real furniture — cabinets, wardrobes, drawer units, tables, beds, and sofas — with shelf and drawer counts you can set</li>
               <li>New Mover tool: pack items into boxes when you're moving, then unpack them into any room in your new home</li>
-              <li>Rebuilt the app's internal data layer for better security and a slightly faster startup (no change to how you use the app)</li>
+              <li>Removed the app's internal HTTP server in favor of direct, more secure communication between its parts — no change to how you use the app</li>
             </ul>
           </li>
           <li class="changelog__entry">
