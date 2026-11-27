@@ -93,7 +93,7 @@
 
           <a href="https://github.com/jhogee-aus/smart-home-inventory/releases/latest/download/Smart-Home-Inventory-Setup.exe" class="btn btn--primary btn--lg">
             Download for Windows
-            <span class="btn__meta">v2.0.0 · ~100&nbsp;MB</span>
+            <span class="btn__meta" id="download-meta">v2.1.0 · ~95&nbsp;MB</span>
           </a>
 
           <p class="fineprint">
@@ -213,6 +213,29 @@
       <a href="#top">Back to top ↑</a>
     </div>
   </footer>
+
+  <script>
+    (function () {
+      var meta = document.getElementById('download-meta');
+      if (!meta) return;
+      fetch('https://api.github.com/repos/jhogee-aus/smart-home-inventory/releases/latest')
+        .then(function (res) {
+          if (!res.ok) throw new Error('GitHub API request failed');
+          return res.json();
+        })
+        .then(function (release) {
+          var asset = (release.assets || []).find(function (a) {
+            return /\.exe$/i.test(a.name);
+          });
+          if (!release.tag_name || !asset) throw new Error('Release data incomplete');
+          var sizeMb = Math.round(asset.size / 1e6);
+          meta.textContent = release.tag_name + ' · ~' + sizeMb + ' MB';
+        })
+        .catch(function () {
+          // Keep the fallback text already in the markup.
+        });
+    })();
+  </script>
 
 </body>
 </html>
